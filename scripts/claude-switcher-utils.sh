@@ -71,6 +71,10 @@ parse_model_args() {
                 selected_model="SONNET"
                 shift
                 ;;
+            --haiku)
+                selected_model="HAIKU"
+                shift
+                ;;
             --model)
                 selected_model="CUSTOM"
                 custom_model_id="$2"

@@ -1,0 +1,49 @@
+#!/bin/bash
+
+# Claude Status Script
+# Shows current Claude Code configuration
+
+# Source utils
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/claude-switcher-utils.sh"
+
+# Load config to ensure we see what the scripts see
+load_config
+
+echo ""
+print_status "=== Claude Code Configuration Status ==="
+echo ""
+
+print_status "Environment Variables:"
+print_status "  CLAUDE_CODE_USE_BEDROCK: ${CLAUDE_CODE_USE_BEDROCK:-not set}"
+print_status "  AWS_REGION: ${AWS_REGION:-not set}"
+print_status "  AWS_BEARER_TOKEN_BEDROCK: ${AWS_BEARER_TOKEN_BEDROCK:+set (hidden)}${AWS_BEARER_TOKEN_BEDROCK:-not set}"
+print_status "  CLAUDE_CODE_MAX_OUTPUT_TOKENS: ${CLAUDE_CODE_MAX_OUTPUT_TOKENS:-not set}"
+print_status "  MAX_THINKING_TOKENS: ${MAX_THINKING_TOKENS:-not set}"
+print_status "  ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:+set (hidden)}${ANTHROPIC_API_KEY:-not set}"
+print_status "  ANTHROPIC_MODEL: ${ANTHROPIC_MODEL:-not set}"
+
+echo ""
+if [ "$CLAUDE_CODE_USE_BEDROCK" = "1" ]; then
+    print_success "Current mode: AWS Bedrock"
+    print_status "- API authentication via AWS Bedrock"
+    print_status "- Login/logout disabled"
+    print_status "- Prompt caching available"
+elif [ "$CLAUDE_CODE_USE_BEDROCK" = "0" ]; then
+    print_success "Current mode: Claude Pro Plan"
+    print_status "- Web authentication via Claude Pro"
+    print_status "- Login/logout enabled"
+else
+    print_warning "Current mode: Default (likely Claude Pro Plan)"
+    print_status "- CLAUDE_CODE_USE_BEDROCK not explicitly set"
+fi
+
+echo ""
+print_status "Available commands:"
+print_status "  claude-pro          - Switch to Claude Pro Plan mode"
+print_status "  claude-aws          - Switch to AWS Bedrock mode"
+print_status "  claude-vertex       - Switch to Google Vertex AI mode"
+print_status "  claude-anthropic    - Switch to Anthropic API mode"
+print_status "  claude-status       - Show current configuration"
+print_status "  claude-sessions     - List active Claude sessions"
+echo ""

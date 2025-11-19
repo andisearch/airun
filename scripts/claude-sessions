@@ -1,0 +1,35 @@
+#!/bin/bash
+
+# Claude Sessions Viewer
+# Lists active Claude Code sessions
+
+# Source utils if available
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+if [ -f "$SCRIPT_DIR/claude-switcher-utils.sh" ]; then
+    source "$SCRIPT_DIR/claude-switcher-utils.sh"
+else
+    BLUE='\033[0;34m'
+    NC='\033[0m'
+    print_status() { echo -e "${BLUE}[Claude]${NC} $1"; }
+fi
+
+print_status "Active Claude Sessions:"
+echo "PID    STARTED      COMMAND"
+echo "--------------------------------------------------"
+
+# Find processes named 'claude' or 'node' running claude
+# This is a best-effort attempt to find claude processes
+# We look for 'claude' in the command line
+pgrep -f "claude" | while read -r pid; do
+    # Get process details: pid, start time, command
+    # Filter out this script itself and grep
+    if ps -p "$pid" -o command= | grep -q "claude-sessions"; then continue; fi
+    
+    ps -p "$pid" -o pid=,lstart=,command= | awk '{
+        printf "%-6s %-12s %s %s %s %s\n", $1, $2, $3, $4, $5, $6
+    }'
+done
+
+if [ -z "$(pgrep -f "claude")" ]; then
+    echo "No active sessions found."
+fi

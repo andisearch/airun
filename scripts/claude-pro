@@ -2,7 +2,7 @@
 
 # Source utils
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-source "$SCRIPT_DIR/utils.sh"
+source "$SCRIPT_DIR/claude-switcher-utils.sh"
 
 # Load config (mainly for consistency, though Pro doesn't need keys)
 load_config
