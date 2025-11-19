@@ -67,6 +67,9 @@ claude-anthropic --opus
 ```bash
 # Switch back to standard web auth
 claude-pro
+
+# OR simply run claude directly (works if no environment variables are set)
+claude
 ```
 
 ## Configuration
