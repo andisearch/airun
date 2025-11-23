@@ -4,6 +4,9 @@
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/claude-switcher-utils.sh"
 
+# Display banner
+display_banner
+
 # Handle --version flag
 if [[ "$1" == "--version" ]] || [[ "$1" == "-v" ]]; then
     echo "claude-switcher v$SWITCHER_VERSION"

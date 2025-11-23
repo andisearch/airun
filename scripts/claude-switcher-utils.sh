@@ -11,6 +11,16 @@ NC='\033[0m' # No Color
 CONFIG_DIR="${HOME}/.claude-switcher"
 SECRETS_FILE="${CONFIG_DIR}/secrets.sh"
 MODELS_FILE="${CONFIG_DIR}/models.sh"
+BANNER_FILE="${CONFIG_DIR}/banner.sh"
+
+# Display banner function - sources and calls the show_banner function from banner.sh
+display_banner() {
+    if [ -f "$BANNER_FILE" ]; then
+        source "$BANNER_FILE"
+        show_banner
+    fi
+}
+
 
 # Version Detection
 # Try to find project root (where VERSION file lives)

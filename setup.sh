@@ -45,6 +45,13 @@ echo "Copying models configuration..."
 cp "$PROJECT_ROOT/config/models.sh" "$MODELS_FILE"
 echo -e "${GREEN}Updated $MODELS_FILE${NC}"
 
+# Copy banner configuration
+BANNER_FILE="$CONFIG_DIR/banner.sh"
+echo "Copying banner configuration..."
+cp "$PROJECT_ROOT/config/banner.sh" "$BANNER_FILE"
+echo -e "${GREEN}Updated $BANNER_FILE${NC}"
+
+
 # --- 1b. API Key Helper Setup ---
 
 # Copy API key helper script

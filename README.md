@@ -2,11 +2,15 @@
 
 A collection of scripts to easily switch between different authentication modes and providers for [Claude Code](https://claude.ai/code).
 
+Never get stopped by rate limits again!
+
+Brought to you by [Andi AI](https://andisearch.com).
+
 ## Features
 
 - **Multiple Providers**: Support for Anthropic API, AWS Bedrock, Google Vertex AI, and Microsoft Foundry on Azure.
 - **Model Switching**: Easily switch between Sonnet 4.5, Opus 4.1, Haiku 4.5, or custom models.
-- **Pro Plan Support**: Toggle back to standard Claude Pro web authentication.
+- **Pro Plan Support**: Toggle back to standard Claude Pro or Max subscriptions with native web authentication.
 - **Seamless Switching**: Switch between providers and authentication methods without logout flows.
 - **Session Management**: Unique session IDs for tracking.
 - **Secure Configuration**: API keys stored in a separate, git-ignored file.
@@ -205,7 +209,7 @@ export CLAUDE_MODEL_SONNET_AWS="global.anthropic.claude-sonnet-4-5-20250929-v1:0
 
 ## Switching Providers to Avoid Rate Limits
 
-**This is the killer feature.** Claude Pro has rate limits that reset every 5 hours. When you hit a limit mid-task, instantly switch to your own API and keep working.
+**This is the killer feature.** Claude Pro has daily rate limits that reset every 5 hours, and weekly limits that reset every 7 days. When you hit a limit mid-task, instantly switch to your own API keys and keep working.
 
 ### Quick Switch with `--resume`
 
@@ -592,4 +596,4 @@ git push origin main && git push origin vx.y.z
 
 ## License
 
-MIT License. Copyright (c) 2025 Jed White from Andi AI Search.
+MIT License. Copyright (c) 2025 Andi - AI Search for the Next Generation.
