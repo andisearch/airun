@@ -146,6 +146,72 @@ parse_model_args() {
 }
 
 
+# Session tracking directory
+SESSIONS_DIR="${CONFIG_DIR}/sessions"
+
+# Write session information to tracking file
+# This allows claude-sessions to show detailed information about active sessions
+write_session_info() {
+    local provider="$1"
+    local mode="$2"
+    local model="$3"
+    local small_model="$4"
+    local region="$5"
+    local project="$6"
+    local auth_method="$7"
+    
+    # Create sessions directory if it doesn't exist
+    mkdir -p "$SESSIONS_DIR"
+    
+    # Write session info to file named by PID
+    local session_file="$SESSIONS_DIR/$$"
+    cat > "$session_file" <<EOF
+CLAUDE_SESSION_ID="${CLAUDE_SESSION_ID}"
+CLAUDE_SESSION_PROVIDER="${provider}"
+CLAUDE_SESSION_MODE="${mode}"
+CLAUDE_SESSION_MODEL="${model}"
+CLAUDE_SESSION_SMALL_MODEL="${small_model}"
+CLAUDE_SESSION_REGION="${region}"
+CLAUDE_SESSION_PROJECT="${project}"
+CLAUDE_SESSION_AUTH_METHOD="${auth_method}"
+CLAUDE_SESSION_START_TIME="$(date +%s)"
+CLAUDE_SESSION_PID="$$"
+EOF
+}
+
+# Clean up session info file when session exits
+cleanup_session_info() {
+    local session_file="$SESSIONS_DIR/$$"
+    if [ -f "$session_file" ]; then
+        rm -f "$session_file"
+    fi
+}
+
+# Clean up stale session files (PIDs that no longer exist)
+# This ensures claude-sessions only shows active sessions
+cleanup_stale_sessions() {
+    if [ ! -d "$SESSIONS_DIR" ]; then
+        return
+    fi
+    
+    for session_file in "$SESSIONS_DIR"/*; do
+        if [ ! -f "$session_file" ]; then
+            continue
+        fi
+        
+        local pid=$(basename "$session_file")
+        
+        # Check if process exists and is a claude process
+        if ! ps -p "$pid" > /dev/null 2>&1; then
+            # PID doesn't exist, remove stale session file
+            rm -f "$session_file"
+        elif ! ps -p "$pid" -o command= 2>/dev/null | grep -q "claude"; then
+            # PID exists but is not a claude process (PID got reused)
+            rm -f "$session_file"
+        fi
+    done
+}
+
 # Common cleanup/restore function
 restore_env() {
     # This should be called by trap

@@ -5,6 +5,33 @@ All notable changes to claude-switcher will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.4] - 2025-11-23
+
+### Added
+- **Comprehensive Session Tracking**: `claude-sessions` now displays detailed information about active Claude sessions
+  - Shows provider (AWS Bedrock, Vertex AI, Anthropic API, Claude Pro)
+  - Shows model name, region/project, session ID, and uptime
+  - File-based tracking system in `~/.claude-switcher/sessions/`
+- **Robust Stale Session Cleanup**: Automatic cleanup of session files for non-existent PIDs
+  - Multiple verification layers ensure only active sessions are displayed
+  - Protection against PID reuse (verifies process is actually Claude)
+- **Enhanced `claude-status`**: Now detects and displays current session information
+  - Shows active session details when running within a Claude session
+  - Displays provider, model, region, auth method, and uptime
+- Session tracking functions in `claude-switcher-utils.sh`:
+  - `write_session_info()`: Records session metadata on startup
+  - `cleanup_session_info()`: Removes session file on exit
+  - `cleanup_stale_sessions()`: Removes files for dead processes
+
+### Changed
+- Updated all wrapper scripts (`claude-aws`, `claude-vertex`, `claude-apikey`, `claude-pro`, `claude-azure`) to write and clean up session tracking files
+- Rewrote `claude-sessions` from process-based detection to file-based tracking for reliability
+- `claude-sessions` output now includes comprehensive session metadata in formatted table
+
+### Fixed
+- Session tracking now works reliably on macOS (previous process-based approach was unreliable)
+- `claude-sessions` no longer shows stale sessions or "Mode: Unknown"
+
 ## [1.0.2] - 2025-11-23
 
 ### Added

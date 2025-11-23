@@ -127,12 +127,32 @@ fi
 
 print_status "Launching Claude Code..."
 
+# Determine auth method for tracking
+if [ -n "$ANTHROPIC_FOUNDRY_API_KEY" ]; then
+    AUTH_METHOD="API Key"
+else
+    AUTH_METHOD="Azure Default Credentials"
+fi
+
+# Write session information for tracking
+write_session_info \
+    "Microsoft Azure" \
+    "BYOK" \
+    "$ANTHROPIC_MODEL" \
+    "$ANTHROPIC_SMALL_FAST_MODEL" \
+    "" \
+    "${ANTHROPIC_FOUNDRY_RESOURCE:-$ANTHROPIC_FOUNDRY_BASE_URL}" \
+    "$AUTH_METHOD"
+
 # Unset ANTHROPIC_API_KEY to prevent auth conflict with Azure Foundry
 # This ensures only Azure Foundry authentication is active
 unset ANTHROPIC_API_KEY
 
 restore_environment() {
     print_status "Restoring original environment variables..."
+    
+    # Clean up session tracking file
+    cleanup_session_info
     
     if [ -n "$SAVED_ANTHROPIC_MODEL" ]; then
         export ANTHROPIC_MODEL="$SAVED_ANTHROPIC_MODEL"

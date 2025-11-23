@@ -161,12 +161,25 @@ print_status "- Small/Fast Model: $ANTHROPIC_SMALL_FAST_MODEL"
 
 print_status "Launching Claude Code..."
 
+# Write session information for tracking
+write_session_info \
+    "Vertex AI" \
+    "BYOK" \
+    "$ANTHROPIC_MODEL" \
+    "$ANTHROPIC_SMALL_FAST_MODEL" \
+    "$CLOUD_ML_REGION" \
+    "$ANTHROPIC_VERTEX_PROJECT_ID" \
+    "$AUTH_METHOD"
+
 # Unset ANTHROPIC_API_KEY to prevent auth conflict with Vertex AI
 # This ensures only Vertex AI authentication is active
 unset ANTHROPIC_API_KEY
 
 restore_environment() {
     print_status "Restoring original environment variables..."
+    
+    # Clean up session tracking file
+    cleanup_session_info
     
     if [ -n "$SAVED_ANTHROPIC_MODEL" ]; then
         export ANTHROPIC_MODEL="$SAVED_ANTHROPIC_MODEL"

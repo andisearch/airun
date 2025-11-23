@@ -366,7 +366,7 @@ claude-status
 ```
 
 #### `claude-sessions`
-Lists all active Claude Code processes with session tracking:
+Lists all active Claude Code sessions with detailed tracking information:
 
 ```bash
 claude-sessions
@@ -374,20 +374,23 @@ claude-sessions
 
 **Shows:**
 - Process ID (PID)
-- Authentication mode (AWS Bedrock, Vertex AI, Anthropic API, Claude Pro)
-- Session ID for tracking
-- Region (for AWS)
-- Status
+- Provider (AWS Bedrock, Vertex AI, Anthropic API, Claude Pro)
+- Model name
+- Region (AWS) or Project (Vertex AI)
+- Session ID (abbreviated)
+- Uptime
 
 **Example output:**
 ```
-[Claude Sessions] Found Claude Code processes:
+[Claude Switcher] Active Claude Code Sessions:
 
-PID      Mode                 Session ID                Region          Status
-----     ----                 ----------                ------          ------
-12345    AWS Bedrock          aws-12345-1234567890      us-west-2       Running
-67890    Vertex AI            vertex-67890-1234567     N/A             Running
+PID      Provider        Model                                    Region/Project   Session ID      Uptime
+----     --------        -----                                    --------------   ----------      ------
+12345    AWS Bedrock     claude-sonnet-4-5-20250929-v1:0          us-west-2        1234567890      2h15m
+67890    Vertex AI       claude-sonnet-4-5@20250929               my-gcp-project   2345678901      45m30s
 ```
+
+> **Note**: Session tracking is file-based with automatic stale session cleanup. Only actual running Claude processes are shown.
 
 ## Configuration
 
@@ -580,7 +583,7 @@ If web authentication doesn't activate after running `claude-pro`:
 
 ## Versioning
 
-**Current Version**: `1.0.2` (see [VERSION](VERSION) or run `claude-apikey --version`)
+**Current Version**: `1.0.4` (see [VERSION](VERSION) or run `claude-apikey --version`)
 
 This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html). See [CHANGELOG.md](CHANGELOG.md) for version history.
 
@@ -594,6 +597,12 @@ git tag -a vx.y.z -m "Release vx.y.z: Description"
 git push origin main && git push origin vx.y.z
 ```
 
+## Author
+
+**Claude Switcher** is created and maintained by **Jed White**, CTO of [Andi](https://andisearch.com).
+
 ## License
 
 MIT License. Copyright (c) 2025 Andi - AI Search for the Next Generation.
+
+See [LICENSE](LICENSE) for full license text.

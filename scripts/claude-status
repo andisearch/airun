@@ -15,6 +15,65 @@ print_status "=== Claude Code Configuration Status ==="
 print_status "claude-switcher version: $SWITCHER_VERSION"
 echo ""
 
+# Check if we're running in an active Claude session by checking parent processes
+CURRENT_SESSION_FILE=""
+current_pid=$$
+
+# Walk up the process tree to find if we're inside a Claude session
+while [ $current_pid -ne 1 ]; do
+    # Check if there's a session file for this PID
+    if [ -f "$SESSIONS_DIR/$current_pid" ]; then
+        CURRENT_SESSION_FILE="$SESSIONS_DIR/$current_pid"
+        break
+    fi
+    
+    # Get parent PID
+    current_pid=$(ps -p $current_pid -o ppid= 2>/dev/null | tr -d ' ')
+    if [ -z "$current_pid" ]; then
+        break
+    fi
+done
+
+# If we found a session, display it prominently
+if [ -n "$CURRENT_SESSION_FILE" ]; then
+    source "$CURRENT_SESSION_FILE"
+    
+    print_success "🔵 Running in Active Session"
+    print_status "  Provider: $CLAUDE_SESSION_PROVIDER"
+    print_status "  Model: $CLAUDE_SESSION_MODEL"
+    print_status "  Session ID: $CLAUDE_SESSION_ID"
+    
+    if [ -n "$CLAUDE_SESSION_REGION" ]; then
+        print_status "  Region: $CLAUDE_SESSION_REGION"
+    fi
+    
+    if [ -n "$CLAUDE_SESSION_PROJECT" ]; then
+        print_status "  Project: $CLAUDE_SESSION_PROJECT"
+    fi
+    
+    if [ -n "$CLAUDE_SESSION_AUTH_METHOD" ]; then
+        print_status "  Auth: $CLAUDE_SESSION_AUTH_METHOD"
+    fi
+    
+    # Calculate uptime
+    current_time=$(date +%s)
+    elapsed=$((current_time - CLAUDE_SESSION_START_TIME))
+    hours=$((elapsed / 3600))
+    minutes=$(((elapsed % 3600) / 60))
+    seconds=$((elapsed % 60))
+    
+    if [ $hours -gt 0 ]; then
+        uptime_str="${hours}h ${minutes}m ${seconds}s"
+    elif [ $minutes -gt 0 ]; then
+        uptime_str="${minutes}m ${seconds}s"
+    else
+        uptime_str="${seconds}s"
+    fi
+    
+    print_status "  Uptime: $uptime_str"
+    echo ""
+fi
+
 # Check API Key Helper configuration
 CLAUDE_SETTINGS_FILE="$HOME/.claude/settings.json"
 API_KEY_HELPER_SCRIPT="$HOME/.claude-switcher/claude-api-key-helper.sh"

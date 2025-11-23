@@ -102,12 +102,25 @@ print_status "- Mode set to 'anthropic' (apiKeyHelper will provide API key)"
 
 print_status "Launching Claude Code..."
 
+# Write session information for tracking
+write_session_info \
+    "Anthropic API" \
+    "BYOK" \
+    "$ANTHROPIC_MODEL" \
+    "$ANTHROPIC_SMALL_FAST_MODEL" \
+    "" \
+    "" \
+    "apiKeyHelper"
+
 # Unset ANTHROPIC_API_KEY to prevent auth conflict with apiKeyHelper
 # The helper script will provide the key by reading secrets.sh internally
 unset ANTHROPIC_API_KEY
 
 restore_environment() {
     print_status "Restoring original environment variables and settings..."
+    
+    # Clean up session tracking file
+    cleanup_session_info
     
     # Restore apiKeyHelper to its original state (before we modified it)
     # This preserves user's existing apiKeyHelper if they had one

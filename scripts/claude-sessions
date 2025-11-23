@@ -13,66 +13,151 @@ else
     print_status() { echo -e "${BLUE}[Claude Sessions]${NC} $1"; }
 fi
 
-echo ""
-print_status "Found Claude Code processes:"
-echo ""
-printf "%-8s %-20s %-30s %-15s %-10s\n" "PID" "Mode" "Session ID" "Region" "Status"
-printf "%-8s %-20s %-30s %-15s %-10s\n" "----" "----" "----------" "------" "------"
+# Clean up any stale session files first
+cleanup_stale_sessions
 
-# Find actual Claude Code processes (not our wrapper scripts)
-found_sessions=false
+echo ""
+print_status "Active Claude Code Sessions:"
+echo ""
 
-# Look for the actual 'claude' binary process
-for pid in $(pgrep -x "claude" 2>/dev/null); do
-    # Get process command line to check if it's not our scripts
-    cmd=$(ps -p "$pid" -o command= 2>/dev/null)
+# Check if sessions directory exists and has any files
+if [ ! -d "$SESSIONS_DIR" ] || [ -z "$(ls -A "$SESSIONS_DIR" 2>/dev/null)" ]; then
+    print_status "No active Claude sessions found"
+    echo ""
+    print_status "Sessions started with claude-pro, claude-aws, claude-vertex, claude-apikey, or claude-azure will appear here"
+    echo ""
+    print_status "Commands:"
+    print_status "  claude-status   - Show current terminal's Claude configuration"
+    print_status "  claude-sessions - Show all active Claude sessions (this command)"
+    echo ""
+    exit 0
+fi
+
+# Display header
+printf "%-8s %-15s %-40s %-20s %-15s %s\n" "PID" "Provider" "Model" "Region/Project" "Session ID" "Uptime"
+printf "%-8s %-15s %-40s %-20s %-15s %s\n" "----" "--------" "-----" "--------------" "----------" "------"
+
+# Calculate uptime helper
+calculate_uptime() {
+    local start_time=$1
+    local current_time=$(date +%s)
+    local elapsed=$((current_time - start_time))
     
-    # Skip if it's one of our wrapper scripts
-    if echo "$cmd" | grep -qE "claude-(pro|aws|vertex|anthropic|sessions|status)"; then
+    local hours=$((elapsed / 3600))
+    local minutes=$(((elapsed % 3600) / 60))
+    local seconds=$((elapsed % 60))
+    
+    if [ $hours -gt 0 ]; then
+        echo "${hours}h${minutes}m"
+    elif [ $minutes -gt 0 ]; then
+        echo "${minutes}m${seconds}s"
+    else
+        echo "${seconds}s"
+    fi
+}
+
+# Iterate through session files and display info
+found_sessions=false
+for session_file in "$SESSIONS_DIR"/*; do
+    if [ ! -f "$session_file" ]; then
+        continue
+    fi
+    
+    # Source the session file to get variables
+    source "$session_file"
+    
+    # Verify the PID is still running (double-check)
+    if ! ps -p "$CLAUDE_SESSION_PID" > /dev/null 2>&1; then
         continue
     fi
     
     found_sessions=true
     
-    # Try to determine the mode by checking parent environment
-    # Get the parent process ID
-    ppid=$(ps -p "$pid" -o ppid= 2>/dev/null | tr -d ' ')
-    
-    mode="Unknown"
-    session_id="N/A"
-    region="N/A"
-    
-    # Check environment variables of the process if possible
-    # On macOS, we can try to infer from parent or check ps output
-    if [ -n "$ppid" ]; then
-        parent_cmd=$(ps -p "$ppid" -o command= 2>/dev/null)
-        
-        # Detect mode from parent command
-        if echo "$parent_cmd" | grep -q "claude-aws"; then
-            mode="AWS Bedrock"
-            region="us-west-2"  # Default, could be extracted from env
-        elif echo "$parent_cmd" | grep -q "claude-vertex"; then
-            mode="Vertex AI"
-        elif echo "$parent_cmd" | grep -q "claude-apikey"; then
-            mode="Anthropic API"
-        elif echo "$parent_cmd" | grep -q "claude-pro"; then
-            mode="Claude Pro"
+    # Determine what to show in Region/Project column
+    region_or_project=""
+    if [ -n "$CLAUDE_SESSION_REGION" ]; then
+        region_or_project="$CLAUDE_SESSION_REGION"
+    elif [ -n "$CLAUDE_SESSION_PROJECT" ]; then
+        # Truncate project ID if too long
+        if [ ${#CLAUDE_SESSION_PROJECT} -gt 20 ]; then
+            region_or_project="${CLAUDE_SESSION_PROJECT:0:17}..."
+        else
+            region_or_project="$CLAUDE_SESSION_PROJECT"
         fi
-        
-        # Try to extract session ID from parent env (if our scripts set it)
-        # This is best-effort and may not work on all systems
-        if echo "$parent_cmd" | grep -oE "(aws|vertex|anthropic|pro)-[0-9]+-[0-9]+" > /dev/null 2>&1; then
-            session_id=$(echo "$parent_cmd" | grep -oE "(aws|vertex|anthropic|pro)-[0-9]+-[0-9]+" | head -1)
-        fi
+    else
+        region_or_project="N/A"
     fi
     
-    printf "%-8s %-20s %-30s %-15s %-10s\n" "$pid" "$mode" "$session_id" "$region" "Running"
+    # Calculate uptime
+    uptime=$(calculate_uptime "$CLAUDE_SESSION_START_TIME")
+    
+    # Truncate model name if too long
+    model_display="$CLAUDE_SESSION_MODEL"
+    if [ ${#model_display} -gt 40 ]; then
+        model_display="${model_display:0:37}..."
+    fi
+    
+    # Extract short session ID (last part after last hyphen)
+    session_id_short=$(echo "$CLAUDE_SESSION_ID" | rev | cut -d'-' -f1 | rev)
+    
+    printf "%-8s %-15s %-40s %-20s %-15s %s\n" \
+        "$CLAUDE_SESSION_PID" \
+        "$CLAUDE_SESSION_PROVIDER" \
+        "$model_display" \
+        "$region_or_project" \
+        "$session_id_short" \
+        "$uptime"
+done
+
+# Also check for native `claude` processes (not launched via our wrapper scripts)
+# These won't have session tracking files, but we can still show them
+for pid in $(pgrep -x "claude" 2>/dev/null); do
+    # Skip if we already showed this PID (has a tracking file)
+    if [ -f "$SESSIONS_DIR/$pid" ]; then
+        continue
+    fi
+    
+    # Verify it's actually a claude process
+    if ! ps -p "$pid" -o command= 2>/dev/null | grep -q "claude"; then
+        continue
+    fi
+    
+    found_sessions=true
+    
+    # Calculate uptime from process start time
+    if command -v ps >/dev/null 2>&1; then
+        # Get process start time (seconds since epoch on macOS requires different approach)
+        # Use lstart which gives us the start time, then calculate elapsed
+        start_time_str=$(ps -p "$pid" -o lstart= 2>/dev/null)
+        if [ -n "$start_time_str" ]; then
+            # Convert to epoch (this is macOS-compatible)
+            start_epoch=$(date -j -f "%a %b %d %T %Y" "$start_time_str" "+%s" 2>/dev/null || echo "0")
+            if [ "$start_epoch" != "0" ]; then
+                uptime=$(calculate_uptime "$start_epoch")
+            else
+                uptime="Unknown"
+            fi
+        else
+            uptime="Unknown"
+        fi
+    else
+        uptime="Unknown"
+    fi
+    
+    # Display native session with limited info
+    printf "%-8s %-15s %-40s %-20s %-15s %s\n" \
+        "$pid" \
+        "Native Claude" \
+        "(no tracking)" \
+        "N/A" \
+        "N/A" \
+        "$uptime"
 done
 
 if [ "$found_sessions" = false ]; then
     echo ""
-    print_status "No Claude sessions with session tracking found"
-    print_status "Sessions started with claude-pro, claude-aws, claude-vertex, or claude-apikey will appear here"
+    print_status "No active Claude sessions found"
+    print_status "Sessions started with claude-pro, claude-aws, claude-vertex, claude-apikey, or claude-azure will appear here"
 fi
 
 echo ""

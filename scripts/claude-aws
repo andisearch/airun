@@ -114,7 +114,18 @@ print_status "- Region: $AWS_REGION"
 print_status "- Model: $ANTHROPIC_MODEL"
 print_status "- Small/Fast Model: $ANTHROPIC_SMALL_FAST_MODEL"
 
-print_status "Launching Claude Code..."
+print_status \"Launching Claude Code...\"
+
+# Write session information for tracking
+write_session_info \
+    "AWS Bedrock" \
+    "BYOK" \
+    "$ANTHROPIC_MODEL" \
+    "$ANTHROPIC_SMALL_FAST_MODEL" \
+    "$AWS_REGION" \
+    "" \
+    "$AUTH_METHOD"
+
 
 # Unset ANTHROPIC_API_KEY to prevent auth conflict with AWS Bedrock
 # This ensures only AWS Bedrock authentication is active
@@ -123,6 +134,9 @@ unset ANTHROPIC_API_KEY
 # Function to restore original environment variables
 restore_environment() {
     print_status "Restoring original environment variables..."
+    
+    # Clean up session tracking file
+    cleanup_session_info
     
     if [ -n "$SAVED_AWS_REGION" ]; then
         export AWS_REGION="$SAVED_AWS_REGION"
