@@ -22,9 +22,10 @@ For switching between **Claude Pro/Max subscription** and **Anthropic native API
 
 1. **Session start**: `claude-apikey` saves your existing apiKeyHelper configuration (if any), then adds its own
 2. **Mode tracking** in `~/.claude-switcher/current-mode.sh` stores the current provider (`pro` or `anthropic`)
-3. **Dynamic authentication**: The helper script returns your API key in `anthropic` mode
-4. **Session end**: Restore trap automatically restores your original apiKeyHelper configuration
-5. **Plain `claude` unaffected**: Always works exactly as before installation
+3. **Dynamic authentication**: The helper script reads `ANTHROPIC_API_KEY` from `secrets.sh` and returns it to Claude
+4. **No env variable exposure**: `ANTHROPIC_API_KEY` is NOT exported to the Claude CLI process, preventing auth conflicts
+5. **Session end**: Restore trap automatically restores your original apiKeyHelper configuration
+6. **Plain `claude` unaffected**: Always works exactly as before installation
 
 **Similarly for Pro mode**: `claude-pro` temporarily removes apiKeyHelper for the session, then restores it on exit.
 
@@ -33,6 +34,7 @@ For switching between **Claude Pro/Max subscription** and **Anthropic native API
 - ✅ **Session-scoped**: Like AWS/Vertex/Azure, changes only affect the wrapper script session  
 - ✅ **Auto-cleanup**: Plain `claude` always runs in native state after any script exits
 - ✅ **Multi-session safe**: Each session has independent state tracking
+- ✅ **No auth conflicts**: Only one authentication method visible to Claude CLI
 ### Environment Variables (AWS, Vertex AI, Azure)
 
 For **AWS Bedrock**, **Google Vertex AI**, and **Microsoft Foundry on Azure**, switching is even simpler:
@@ -140,10 +142,12 @@ export AWS_REGION="us-west-2"
 > **Note**: Models are region-specific. Check [availability](https://console.cloud.google.com/vertex-ai/publishers/anthropic/model-garden) in your region.
 
 **Anthropic API:**
+
+> **Note**: When using `claude-apikey`, your API key is validated but NOT exported as an environment variable to avoid authentication conflicts. The `apiKeyHelper` script reads the key directly from `secrets.sh` and provides it to Claude CLI as a token. This ensures only one authentication method is active.
+
 ```bash
 export ANTHROPIC_API_KEY="sk-ant-..."
 ```
-> **Note**: Scripts validate that `ANTHROPIC_API_KEY` is set before launching.
 
 **Microsoft Foundry on Azure:**
 
