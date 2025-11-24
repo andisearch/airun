@@ -7,14 +7,62 @@
 
 A collection of scripts to easily switch between different authentication modes and model providers for [Claude Code](https://claude.ai/code).
 
-Never get stopped by rate limits again! Jump between your Claude Pro/Max subscription and API keys from Anthropic, AWS, Google Cloud and now Microsoft Azure on the fly and pick up where you left off.
+Never get blocked by rate limits again! Jump between your Claude Pro/Max subscription and API keys from Anthropic, AWS, Google Cloud and now Microsoft Azure. Switch providers on the fly and pick up where you left off.
 
-BONUS: Startups can use their compute credits across multiple clouds to run Claude Code; either as a companion to their subscription or purely with API keys.
+Startups: Get the most from your Claude subscription PLUS use your free Cloud Credits.
 
 Claude Switcher is brought to you by the team from [Andi AI](https://andisearch.com).
 
 > [!TIP]
-> **Love this project?** ⭐ **[Star this repo](https://github.com/andisearch/claude-switcher)** to show your support and help others discover it! If Claude Switcher saves you time and frustration, consider [buying us a coffee](https://buymeacoffee.com/andisearch) or [sponsoring on GitHub](https://github.com/sponsors/andisearch). Every contribution helps us maintain and improve this tool!
+> **Love this project?** ⭐ **[Star this repo](https://github.com/andisearch/claude-switcher)** to show your support and help others discover it! If Claude Switcher saves you money and time, consider [buying us a coffee](https://buymeacoffee.com/andisearch) or [sponsoring on GitHub](https://github.com/sponsors/andisearch). Every contribution helps!
+
+## Quick Start
+
+**Prerequisites**: [Claude Code](https://claude.ai/code) installed
+
+1. **Clone and run setup:**
+   ```bash
+   git clone https://github.com/andisearch/claude-switcher.git
+   cd claude-switcher
+   ./setup.sh
+   ```
+
+2. **Configure your API keys:**
+   ```bash
+   nano ~/.claude-switcher/secrets.sh
+   ```
+   
+   **Minimal example** (supports all four providers):
+   ```bash
+   # AWS Profile
+   export AWS_PROFILE="my-aws-profile"
+   export AWS_REGION="us-west-2"
+   
+   # Google Vertex AI Credentials
+   export ANTHROPIC_VERTEX_PROJECT_ID="my-ai-project"
+   export CLOUD_ML_REGION="global"
+   
+   # Anthropic API Key
+   export ANTHROPIC_API_KEY="sk-ant-..."
+   
+   # Microsoft Foundry on Azure Credentials
+   export ANTHROPIC_FOUNDRY_API_KEY="my-azure-foundry-project-api-key"
+   export ANTHROPIC_FOUNDRY_RESOURCE="my-azure-foundry-resource-name"
+   ```
+
+3. **Start switching between providers:**
+   ```bash
+   claude-aws          # Use AWS Bedrock
+   claude-vertex       # Use Google Vertex AI
+   claude-apikey       # Use Anthropic API
+   claude-azure        # Use Microsoft Azure
+   
+   # Continue your last conversation on any provider
+   claude-aws --resume
+   claude-vertex --resume
+   ```
+
+That's it! See below for detailed configuration options and advanced features.
 
 ## Features
 
@@ -609,21 +657,17 @@ git push origin main && git push origin vx.y.z
 
 ## Support This Project
 
-**Claude Switcher is free and open source**, built with ❤️ to help developers be more productive with Claude Code.
+**Claude Switcher is free and open source**, built with ❤️ to help developers be more productive and save money with Claude Code.
 
 If you find this tool valuable, here's how you can support its development:
 
 ### ⭐ Star This Repo
-The simplest way to show your support is to **[give us a star on GitHub](https://github.com/andisearch/claude-switcher)**! It helps others discover the project and motivates us to keep improving it.
+The simplest way to show your support is to **[give us a star on GitHub](https://github.com/andisearch/claude-switcher)**! It helps others discover the project.
 
 [![GitHub Stars](https://img.shields.io/github/stars/andisearch/claude-switcher?style=social)](https://github.com/andisearch/claude-switcher/stargazers)
 
 ### 💖 Donate
-Development and maintenance take time and effort. Your financial support helps us:
-- Keep the project up-to-date with new Claude models and providers
-- Respond to issues and feature requests
-- Improve documentation and add new features
-- Maintain compatibility across platforms
+Your financial support not only helps us to maintain this project but also to build Andi AI search and keep it free. These scripts help us save a lot of time and money, and we hope they'll help you too!
 
 **Choose your preferred platform:**
 
