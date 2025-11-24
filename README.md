@@ -179,7 +179,7 @@ Announced November 18, 2024 ([blog post](https://www.anthropic.com/news/claude-i
    export ANTHROPIC_FOUNDRY_RESOURCE="your-resource-name"
    ```
 
-> **Note**: Set deployment names to match what you created in Azure: `CLAUDE_MODEL_SONNET_AZURE`, `CLAUDE_MODEL_HAIKU_AZURE`, `CLAUDE_MODEL_OPUS_AZURE`.
+> **Note**: Use the default deployment names or set custom names to match what you created in Azure: `CLAUDE_MODEL_SONNET_AZURE`, `CLAUDE_MODEL_HAIKU_AZURE`, `CLAUDE_MODEL_OPUS_AZURE`.
 
 #### Overriding Defaults (Optional)
 You can override default model IDs or regions in the same `secrets.sh` file. This is useful for testing new models or using custom endpoints.
@@ -450,7 +450,7 @@ echo 'export CLAUDE_SWITCHER_MODE="anthropic"' > ~/.claude-switcher/current-mode
 
 ## Versioning
 
-**Current Version**: `1.0.4` (see [VERSION](VERSION) or run `claude-apikey --version`)
+**Current Version**: see [VERSION](VERSION) or run `claude-apikey --version`
 
 This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html). See [CHANGELOG.md](CHANGELOG.md) for version history.
 

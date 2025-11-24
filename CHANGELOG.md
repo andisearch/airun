@@ -5,6 +5,26 @@ All notable changes to claude-switcher will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.5] - 2025-11-23
+
+### Changed
+- **README Simplification**: Streamlined documentation from 704 to 503 lines (28.5% reduction)
+  - Converted verbose usage examples to scannable table format (40 line reduction)
+  - Condensed "How It Works" section from technical details to clear bullet points (23 line reduction)
+  - Simplified provider configuration sections with links to external docs (33 line reduction)
+  - Reorganized troubleshooting with common issues first (44 line reduction)
+  - Reduced model configuration section by removing redundant variable listings (53 line reduction)
+- Improved Quick Start section with example of switching back to native Claude Code
+- Enhanced Azure configuration documentation to clarify default deployment names
+- Refined workflow examples for better clarity (e.g., "Complex reasoning needed" vs "Large codebase")
+- Updated versioning section to reference VERSION file dynamically
+
+### Improved
+- Significantly enhanced README scannability and user experience
+- Better information hierarchy prioritizing common use cases
+- Reduced redundancy while maintaining all essential information
+- File size reduced by 24.8% (25,993 → 19,547 bytes)
+
 ## [1.0.4] - 2025-11-23
 
 ### Added
