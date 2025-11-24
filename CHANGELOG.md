@@ -5,6 +5,20 @@ All notable changes to claude-switcher will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.6] - 2025-11-23
+
+### Changed
+- Updated Claude Code link to official product page (claude.com/product/claude-code)
+- Improved Vertex AI Model Garden links to use general model garden URL instead of model-specific URL
+- Enhanced provider configuration documentation with direct links to Anthropic's official setup guides
+  - Added link to Google Vertex AI instructions
+  - Added link to Microsoft Foundry instructions
+
+### Improved
+- Better navigation to external documentation resources
+- More reliable links that won't break when specific model URLs change
+- Clearer guidance for users following provider-specific setup steps
+
 ## [1.0.5] - 2025-11-23
 
 ### Changed
