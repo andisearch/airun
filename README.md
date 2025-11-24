@@ -18,7 +18,7 @@ Claude Switcher is brought to you by the team from [Andi AI](https://andisearch.
 
 ## Quick Start
 
-**Prerequisites**: [Claude Code](https://claude.ai/code) installed
+**Prerequisites**: [Claude Code](https://www.claude.com/product/claude-code) installed
 
 1. **Clone and run setup:**
    ```bash
@@ -144,14 +144,16 @@ export AWS_REGION="us-west-2"
    - **Application Default Credentials** (local dev): `gcloud auth application-default login`
    - **gcloud User Credentials** (fallback): `gcloud auth login`
 3. **Enable Vertex AI API**: [Click to enable](https://console.cloud.google.com/flows/enableapi?apiid=aiplatform.googleapis.com)
-4. **Enable Claude Models**: [Open Model Garden](https://console.cloud.google.com/vertex-ai/publishers/anthropic/model-garden/claude-sonnet-4) and enable desired models
+4. **Enable Claude Models**: [Open Model Garden](https://console.cloud.google.com/vertex-ai/model-garden/) and enable desired models under the Anthropic publisher
 5. **Configure secrets.sh**:
    ```bash
    export ANTHROPIC_VERTEX_PROJECT_ID="your-gcp-project-id"
    export CLOUD_ML_REGION="global"
    ```
 
-> **Note**: Models are region-specific. Check [availability](https://console.cloud.google.com/vertex-ai/publishers/anthropic/model-garden) in your region. Optionally set per-model regions with `VERTEX_REGION_CLAUDE_4_5_SONNET` etc.
+See Anthropic's [Google Vertex instructions](https://code.claude.com/docs/en/google-vertex-ai) for more details.
+
+> **Note**: Models are region-specific. Check [availability](https://console.cloud.google.com/vertex-ai/model-garden/) in your region. Optionally set per-model regions with `VERTEX_REGION_CLAUDE_4_5_SONNET` etc.
 
 **Anthropic API:**
 
@@ -178,6 +180,8 @@ Announced November 18, 2024 ([blog post](https://www.anthropic.com/news/claude-i
    # Option 2: Azure CLI (run: az login)
    export ANTHROPIC_FOUNDRY_RESOURCE="your-resource-name"
    ```
+
+See Anthropic's [Microsoft Foundry instructions](https://code.claude.com/docs/en/microsoft-foundry) for more details.
 
 > **Note**: Use the default deployment names or set custom names to match what you created in Azure: `CLAUDE_MODEL_SONNET_AZURE`, `CLAUDE_MODEL_HAIKU_AZURE`, `CLAUDE_MODEL_OPUS_AZURE`.
 
