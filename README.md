@@ -7,7 +7,7 @@
 
 A collection of scripts to easily switch between different authentication modes and model providers for [Claude Code](https://claude.ai/code).
 
-Never get blocked by rate limits again! Jump between your Claude Pro/Max subscription and API keys from Anthropic, AWS, Google Cloud and now Microsoft Azure. Switch providers on the fly and pick up where you left off.
+Never get blocked by rate limits again! Jump between your Claude Pro/Max subscription and API keys from Anthropic, AWS, Google Cloud and now Microsoft Azure. Now includes Vercel AI Gateway support! Switch providers on the fly and pick up where you left off.
 
 Startups: Get the most from your Claude subscription PLUS use your free Cloud Credits.
 
@@ -285,6 +285,9 @@ claude-apikey --haiku
 
 # Use custom model ID or deployment
 claude-aws --model "global.anthropic.claude-sonnet-4-5-20250929-v1:0"
+
+# Use Vercel AI Gateway
+claude-vercel
 ```
 
 ### Claude Pro Plan
