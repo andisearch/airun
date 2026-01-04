@@ -1,0 +1,171 @@
+#!/bin/bash
+
+# claude-run: Unified entry point for provider switching and executable markdown
+#
+# Interactive mode:
+#   claude-run                     # Same as claude
+#   claude-run --aws --opus        # Same as claude-aws --opus
+#
+# Shebang mode:
+#   claude-run prompt.md           # Execute markdown file
+#   #!/usr/bin/env claude-run      # In markdown file
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/claude-switcher-utils.sh"
+
+# Parse arguments
+PROVIDER=""
+PROVIDER_ARGS=()  # Model flags for provider
+CLAUDE_ARGS=()    # Pass-through to claude
+MD_FILE=""
+
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        # Provider selection
+        --aws)     PROVIDER="aws"; shift ;;
+        --vertex)  PROVIDER="vertex"; shift ;;
+        --apikey)  PROVIDER="apikey"; shift ;;
+        --azure)   PROVIDER="azure"; shift ;;
+        --vercel)  PROVIDER="vercel"; shift ;;
+        --pro)     PROVIDER="pro"; shift ;;
+        
+        # Model flags (pass to provider script)
+        --opus|--sonnet|--haiku)
+            PROVIDER_ARGS+=("$1"); shift ;;
+        --model)
+            PROVIDER_ARGS+=("$1" "$2"); shift 2 ;;
+        
+        # Detect markdown file (positional argument ending in .md)
+        *.md)
+            if [[ -f "$1" ]]; then
+                MD_FILE="$1"
+            else
+                print_error "File not found: $1"
+                exit 1
+            fi
+            shift ;;
+        
+        # Version flag
+        --version|-v)
+            echo "claude-switcher v$SWITCHER_VERSION"
+            exit 0
+            ;;
+        
+        # Help flag
+        --help|-h)
+            cat << 'EOF'
+Usage: claude-run [OPTIONS] [file.md]
+
+A unified entry point for Claude Code provider switching and executable markdown.
+
+INTERACTIVE MODE (no .md file):
+  claude-run                    Same as: claude
+  claude-run --aws              Same as: claude-aws
+  claude-run --aws --opus       Same as: claude-aws --opus
+  claude-run --vertex --resume  Same as: claude-vertex --resume
+
+SHEBANG MODE (.md file provided):
+  claude-run prompt.md          Execute markdown as prompt
+  ./prompt.md                   With #!/usr/bin/env claude-run shebang
+
+PROVIDER FLAGS:
+  --aws       Use AWS Bedrock
+  --vertex    Use Google Vertex AI
+  --apikey    Use Anthropic API
+  --azure     Use Microsoft Azure
+  --vercel    Use Vercel AI Gateway
+  --pro       Use Claude Pro/Max subscription
+
+MODEL FLAGS:
+  --opus      Use Opus 4.5
+  --sonnet    Use Sonnet 4.5 (default)
+  --haiku    Use Haiku 4.5
+  --model ID  Use specific model ID
+
+SHEBANG MODE FLAGS (pass to claude -p):
+  --output-format <fmt>   Output format: text, json, stream-json
+  --max-budget-usd <amt>  Maximum API spend
+  --json-schema <schema>  Enforce JSON structure
+  All other claude flags are passed through.
+
+SECURITY WARNING:
+  Shebang mode runs AI-generated code without interactive approval.
+  Never use --dangerously-skip-permissions outside sandboxed environments.
+EOF
+            exit 0
+            ;;
+        
+        # Everything else passes through to claude
+        *)
+            CLAUDE_ARGS+=("$1"); shift ;;
+    esac
+done
+
+#=============================================================================
+# MODE 1: SHEBANG/FILE EXECUTION (non-interactive)
+#=============================================================================
+if [[ -n "$MD_FILE" ]]; then
+    # Read file content, strip shebang if present
+    if [[ "$(head -1 "$MD_FILE")" == "#!"* ]]; then
+        CONTENT=$(tail -n +2 "$MD_FILE")
+    else
+        CONTENT=$(cat "$MD_FILE")
+    fi
+    
+    # Build execution command
+    if [[ -n "$PROVIDER" ]]; then
+        # For provider mode, we need to set up the environment first
+        # Load config and secrets like provider scripts do
+        load_config
+        
+        # Set provider-specific environment based on selection
+        case $PROVIDER in
+            aws)
+                export CLAUDE_CODE_USE_BEDROCK=1
+                # Parse model args to set ANTHROPIC_MODEL
+                parse_model_args "AWS" "${PROVIDER_ARGS[@]}"
+                ;;
+            vertex)
+                export CLAUDE_CODE_USE_VERTEX=1
+                parse_model_args "VERTEX" "${PROVIDER_ARGS[@]}"
+                ;;
+            apikey)
+                export CLAUDE_CODE_USE_BEDROCK=0
+                parse_model_args "ANTHROPIC" "${PROVIDER_ARGS[@]}"
+                ;;
+            azure)
+                export CLAUDE_CODE_USE_FOUNDRY=1
+                parse_model_args "AZURE" "${PROVIDER_ARGS[@]}"
+                ;;
+            vercel)
+                if [[ -n "$VERCEL_AI_GATEWAY_URL" ]]; then
+                    export ANTHROPIC_BASE_URL="$VERCEL_AI_GATEWAY_URL"
+                else
+                    export ANTHROPIC_BASE_URL="https://ai-gateway.vercel.sh"
+                fi
+                if [[ -n "$VERCEL_AI_GATEWAY_TOKEN" ]]; then
+                    export ANTHROPIC_AUTH_TOKEN="$VERCEL_AI_GATEWAY_TOKEN"
+                fi
+                parse_model_args "VERCEL" "${PROVIDER_ARGS[@]}"
+                ;;
+        esac
+        
+        # Execute with print mode
+        echo "$CONTENT" | claude -p "${CLAUDE_ARGS[@]}"
+    else
+        # Direct to claude without provider setup
+        echo "$CONTENT" | claude -p "${CLAUDE_ARGS[@]}"
+    fi
+    exit $?
+fi
+
+#=============================================================================
+# MODE 2: INTERACTIVE (provider switching or plain claude)
+#=============================================================================
+if [[ -n "$PROVIDER" ]]; then
+    # Delegate to provider script
+    exec "$SCRIPT_DIR/claude-$PROVIDER" "${PROVIDER_ARGS[@]}" "${CLAUDE_ARGS[@]}"
+else
+    # No provider, no file = plain claude
+    exec claude "${PROVIDER_ARGS[@]}" "${CLAUDE_ARGS[@]}"
+fi

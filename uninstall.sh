@@ -25,11 +25,13 @@ CONFIG_DIR="$HOME/.claude-switcher"
 
 # List of scripts to remove
 SCRIPTS=(
+    "claude-run"
     "claude-pro"
     "claude-aws"
     "claude-vertex"
     "claude-apikey"
     "claude-azure"
+    "claude-vercel"
     "claude-status"
     "claude-sessions"
     "claude-switcher-utils.sh"

@@ -5,6 +5,30 @@ All notable changes to claude-switcher will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0] - 2026-01-04
+
+### Added
+- **`claude-run` Unified Entry Point**: New command that combines provider switching and executable markdown
+  - Interactive mode: `claude-run --aws --opus --resume` (equivalent to `claude-aws --opus --resume`)
+  - Shebang mode: Executable markdown files with `#!/usr/bin/env claude-run`
+  - Provider flags: `--aws`, `--vertex`, `--apikey`, `--azure`, `--vercel`, `--pro`
+  - Model flags: `--opus`, `--sonnet`, `--haiku`, `--model <id>`
+  - Full passthrough of all native `claude` flags
+- **Executable Markdown**: Run AI prompts as scripts
+  - Supports `#!/usr/bin/env claude-run` shebang
+  - Multiple flags via `#!/usr/bin/env -S claude-run --aws --opus`
+  - Works with `--output-format json` for scripting
+- **Security Documentation**: Clear warnings about non-interactive mode risks
+  - Trust model explanations (same as `claude -p`)
+  - Guidance on `--dangerously-skip-permissions` appropriate usage
+
+### Changed
+- **README Restructure**: `claude-run` is now the primary recommended approach
+  - Cleaner Quick Start section
+  - Individual provider scripts (`claude-aws`, etc.) documented as secondary option
+  - Added security warnings for shebang mode
+- Setup output now highlights `claude-run` as recommended entry point
+
 ## [1.1.0] - 2026-01-03
 
 ### Added
