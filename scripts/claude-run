@@ -18,9 +18,23 @@ PROVIDER=""
 PROVIDER_ARGS=()  # Model flags for provider
 CLAUDE_ARGS=()    # Pass-through to claude
 MD_FILE=""
+NEEDS_VERBOSE=false  # Track if --output-format stream-json is used
 
 while [[ $# -gt 0 ]]; do
     case $1 in
+        # Handle --output-format which requires --verbose for stream-json
+        --output-format)
+            CLAUDE_ARGS+=("$1" "$2")
+            if [[ "$2" == "stream-json" ]]; then
+                NEEDS_VERBOSE=true
+            fi
+            shift 2 ;;
+        --output-format=*)
+            CLAUDE_ARGS+=("$1")
+            if [[ "$1" == "--output-format=stream-json" ]]; then
+                NEEDS_VERBOSE=true
+            fi
+            shift ;;
         # Provider selection
         --aws)     PROVIDER="aws"; shift ;;
         --vertex)  PROVIDER="vertex"; shift ;;
@@ -150,9 +164,19 @@ if [[ -n "$MD_FILE" ]]; then
                 ;;
         esac
         
+        # Add --verbose if stream-json output format requires it
+        if [[ "$NEEDS_VERBOSE" == true ]]; then
+            CLAUDE_ARGS=("--verbose" "${CLAUDE_ARGS[@]}")
+        fi
+        
         # Execute with print mode
         echo "$CONTENT" | claude -p "${CLAUDE_ARGS[@]}"
     else
+        # Add --verbose if stream-json output format requires it
+        if [[ "$NEEDS_VERBOSE" == true ]]; then
+            CLAUDE_ARGS=("--verbose" "${CLAUDE_ARGS[@]}")
+        fi
+        
         # Direct to claude without provider setup
         echo "$CONTENT" | claude -p "${CLAUDE_ARGS[@]}"
     fi
