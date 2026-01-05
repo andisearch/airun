@@ -49,7 +49,7 @@ claude-run task.md
 #!/bin/bash
 claude "$(cat "$1")"
 ```
-This works for simple prompts but lacks the full support here for script automation safely without impact your Claude subscription usage, including provider switching, model selection, output formats, and session isolation.
+This lacks support for safe script automation isolated from your Claude subscription usage, including provider switching, model selection, output formats, and session isolation.
 
 ### Optional: Configure Providers
 
