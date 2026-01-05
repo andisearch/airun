@@ -44,7 +44,7 @@ Or run any markdown file directly:
 claude-run task.md
 ```
 
-**Minimal alternative**: If you just want basic executable markdown without installing this repo, add a `claude-runner` script to your PATH ([credit: apf6](https://www.reddit.com/r/ClaudeAI/comments/1q44kkd/comment/nxpyfui/)):
+**Minimal alternative**: If you just want basic executable markdown without installing this repo, add a `claude-runner` script to your PATH ([credit: apf6](https://www.reddit.com/user/apf6/)):
 ```bash
 #!/bin/bash
 claude "$(cat "$1")"
