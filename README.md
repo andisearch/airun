@@ -44,6 +44,13 @@ Or run any markdown file directly:
 claude-run task.md
 ```
 
+**Minimal alternative**: If you just want basic executable markdown without installing this repo, add a `claude-runner` script to your PATH ([credit: apf6](https://www.reddit.com/r/ClaudeAI/comments/1q44kkd/comment/nxpyfui/)):
+```bash
+#!/bin/bash
+claude "$(cat "$1")"
+```
+This works for simple prompts but lacks the full support here for script automation safely without impact your Claude subscription usage, including provider switching, model selection, output formats, and session isolation.
+
 ### Optional: Configure Providers
 
 To switch between providers (AWS, Vertex, etc.) or use API keys:
