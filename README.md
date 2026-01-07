@@ -43,6 +43,13 @@ Or run any markdown file directly:
 claude-run task.md
 ```
 
+**Pipe data and redirect output** (Unix-style automation):
+```bash
+cat data.json | ./analyze.md > results.txt    # Pipe in, redirect out
+git log -10 | ./summarize.md                  # Feed git history to AI
+./generate.md | ./review.md > final.txt       # Chain scripts together
+```
+
 **Minimal alternative**: If you just want basic executable markdown without installing this repo, add a `claude-runner` script to your PATH:
 ```bash
 #!/bin/bash
