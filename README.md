@@ -8,6 +8,7 @@ Automate scripts with Claude Code. Use shebang support for executable markdown f
 **What it does:**
 - Script automation with `#!/usr/bin/env claude-run` shebang for executable markdown files
 - Unix pipe support: pipe data into scripts, redirect output, chain in pipelines
+- Piped script execution: `curl https://example.com/install.md | claude-run` runs AI scripts from the web
 - Provider switching (optional): `claude-run --aws`, `claude-run --vertex`, etc. Use specific provider API keys in scripts or when you hit rate limits, or for billing management / isolation
 - Model selection: `--opus`, `--haiku`, `--sonnet` and full Claude Code flag support
 - Session continuity: `--resume` picks up your last conversation on any provider
@@ -49,6 +50,13 @@ cat data.json | ./analyze.md > results.txt    # Pipe in, redirect out
 git log -10 | ./summarize.md                  # Feed git history to AI
 ./generate.md | ./review.md > final.txt       # Chain scripts together
 ```
+
+**Run scripts from the web** ([installmd.org](https://installmd.org/) support):
+```bash
+curl -fsSL https://andisearch.github.io/ai-scripts/analyze.md | claude-run
+echo "Explain what a Makefile does" | claude-run         # Simple prompt
+```
+Shebang flags in the markdown (like `--permission-mode bypassPermissions`) are honored.
 
 **Minimal alternative**: If you just want basic executable markdown without installing this repo, add a `claude-runner` script to your PATH:
 ```bash
@@ -364,6 +372,23 @@ Combine traditional tools with AI:
 ```bash
 git log --oneline -20 | ./explain-changes.md > changelog-summary.txt
 ```
+
+**Piped script execution** ([install.md](https://installmd.mintlify.app/) support):
+
+Run AI scripts directly from the web or pipe prompts to claude-run:
+
+```bash
+# Run a script from the web
+curl -fsSL https://andisearch.github.io/ai-scripts/analyze.md | claude-run
+
+# Simple prompt via pipe
+echo "Explain what a Dockerfile does" | claude-run
+
+# Override provider from shebang
+curl -fsSL https://example.com/script.md | claude-run --aws
+```
+
+Shebang flags in piped content are honored (e.g., `--permission-mode bypassPermissions`). CLI flags override shebang flags for safety.
 
 ---
 

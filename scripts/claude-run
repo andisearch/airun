@@ -99,6 +99,13 @@ SHEBANG MODE (.md file provided):
   claude-run prompt.md          Execute markdown as prompt
   ./prompt.md                   With #!/usr/bin/env claude-run shebang
 
+PIPED SCRIPT MODE (stdin without file):
+  curl -fsSL URL/install.md | claude-run    Execute remote markdown script
+  echo "Prompt" | claude-run                Execute piped content as prompt
+  
+  Shebang flags in piped content are honored (e.g., --permission-mode).
+  CLI flags override shebang flags.
+
 PROVIDER FLAGS:
   --aws       Use AWS Bedrock
   --vertex    Use Google Vertex AI
@@ -113,10 +120,11 @@ MODEL FLAGS:
   --haiku    Use Haiku 4.5
   --model ID  Use specific model ID
 
-SHEBANG MODE FLAGS (pass to claude -p):
+SHEBANG/PIPED MODE FLAGS (pass to claude -p):
   --output-format <fmt>   Output format: text, json, stream-json
   --max-budget-usd <amt>  Maximum API spend
   --json-schema <schema>  Enforce JSON structure
+  --permission-mode <m>   Permission mode (e.g., bypassPermissions)
   --stdin-position <pos>  Where to place piped input: 'prepend' (default) or 'append'
   All other claude flags are passed through.
 
@@ -126,8 +134,9 @@ STDIN PIPING:
     cat data.txt | ./summarize.md --stdin-position append
 
 SECURITY WARNING:
-  Shebang mode runs AI-generated code without interactive approval.
-  Never use --dangerously-skip-permissions outside sandboxed environments.
+  Piped and shebang modes run AI-generated code without interactive approval.
+  Review scripts before running. Never use --dangerously-skip-permissions
+  outside sandboxed environments.
 EOF
             exit 0
             ;;
@@ -227,7 +236,112 @@ $STDIN_CONTENT"
 fi
 
 #=============================================================================
-# MODE 2: INTERACTIVE (provider switching or plain claude)
+# MODE 2: PIPED SCRIPT EXECUTION (stdin without file)
+# Supports: curl -fsSL https://example.com/install.md | claude-run
+#=============================================================================
+if [[ -n "$STDIN_CONTENT" ]]; then
+    # Check for shebang in piped content and extract flags
+    FIRST_LINE="${STDIN_CONTENT%%$'\n'*}"
+    
+    if [[ "$FIRST_LINE" == "#!"* ]]; then
+        # Strip shebang line from content
+        CONTENT="${STDIN_CONTENT#*$'\n'}"
+        
+        # Extract flags from shebang (e.g., "#!/usr/bin/env claude-run --opus --aws")
+        # or "#!/usr/bin/env -S claude-run --permission-mode bypassPermissions"
+        if [[ "$FIRST_LINE" == *"claude-run"* ]]; then
+            SHEBANG_FLAGS="${FIRST_LINE#*claude-run}"
+            # Trim leading whitespace
+            SHEBANG_FLAGS="${SHEBANG_FLAGS#"${SHEBANG_FLAGS%%[![:space:]]*}"}"
+            
+            # Parse shebang flags (only if CLI didn't already specify)
+            # CLI flags take precedence over shebang flags
+            if [[ -n "$SHEBANG_FLAGS" ]]; then
+                # Convert shebang flags to array and process
+                read -ra SHEBANG_ARR <<< "$SHEBANG_FLAGS"
+                for arg in "${SHEBANG_ARR[@]}"; do
+                    case "$arg" in
+                        # Provider flags - only use if not already set by CLI
+                        --aws)     [[ -z "$PROVIDER" ]] && PROVIDER="aws" ;;
+                        --vertex)  [[ -z "$PROVIDER" ]] && PROVIDER="vertex" ;;
+                        --apikey)  [[ -z "$PROVIDER" ]] && PROVIDER="apikey" ;;
+                        --azure)   [[ -z "$PROVIDER" ]] && PROVIDER="azure" ;;
+                        --vercel)  [[ -z "$PROVIDER" ]] && PROVIDER="vercel" ;;
+                        --pro)     [[ -z "$PROVIDER" ]] && PROVIDER="pro" ;;
+                        
+                        # Model flags - accumulate (CLI already processed, these extend)
+                        --opus|--sonnet|--haiku)
+                            PROVIDER_ARGS+=("$arg") ;;
+                        
+                        # Other flags pass through to claude
+                        *)
+                            CLAUDE_ARGS+=("$arg") ;;
+                    esac
+                done
+            fi
+        fi
+    else
+        # No shebang, use entire content as prompt
+        CONTENT="$STDIN_CONTENT"
+    fi
+    
+    # Build execution command (same logic as file mode)
+    if [[ -n "$PROVIDER" ]]; then
+        # Load config and secrets for provider mode
+        load_config
+        
+        # Set provider-specific environment based on selection
+        case $PROVIDER in
+            aws)
+                export CLAUDE_CODE_USE_BEDROCK=1
+                parse_model_args "AWS" "${PROVIDER_ARGS[@]}"
+                ;;
+            vertex)
+                export CLAUDE_CODE_USE_VERTEX=1
+                parse_model_args "VERTEX" "${PROVIDER_ARGS[@]}"
+                ;;
+            apikey)
+                export CLAUDE_CODE_USE_BEDROCK=0
+                parse_model_args "ANTHROPIC" "${PROVIDER_ARGS[@]}"
+                ;;
+            azure)
+                export CLAUDE_CODE_USE_FOUNDRY=1
+                parse_model_args "AZURE" "${PROVIDER_ARGS[@]}"
+                ;;
+            vercel)
+                if [[ -n "$VERCEL_AI_GATEWAY_URL" ]]; then
+                    export ANTHROPIC_BASE_URL="$VERCEL_AI_GATEWAY_URL"
+                else
+                    export ANTHROPIC_BASE_URL="https://ai-gateway.vercel.sh"
+                fi
+                if [[ -n "$VERCEL_AI_GATEWAY_TOKEN" ]]; then
+                    export ANTHROPIC_AUTH_TOKEN="$VERCEL_AI_GATEWAY_TOKEN"
+                fi
+                parse_model_args "VERCEL" "${PROVIDER_ARGS[@]}"
+                ;;
+        esac
+        
+        # Add --verbose if stream-json output format requires it
+        if [[ "$NEEDS_VERBOSE" == true ]]; then
+            CLAUDE_ARGS=("--verbose" "${CLAUDE_ARGS[@]}")
+        fi
+        
+        # Execute with print mode
+        echo "$CONTENT" | claude -p "${CLAUDE_ARGS[@]}"
+    else
+        # Add --verbose if stream-json output format requires it
+        if [[ "$NEEDS_VERBOSE" == true ]]; then
+            CLAUDE_ARGS=("--verbose" "${CLAUDE_ARGS[@]}")
+        fi
+        
+        # Direct to claude without provider setup
+        echo "$CONTENT" | claude -p "${CLAUDE_ARGS[@]}"
+    fi
+    exit $?
+fi
+
+#=============================================================================
+# MODE 3: INTERACTIVE (provider switching or plain claude)
 #=============================================================================
 if [[ -n "$PROVIDER" ]]; then
     # Delegate to provider script
