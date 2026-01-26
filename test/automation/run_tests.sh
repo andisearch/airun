@@ -217,6 +217,123 @@ test_backward_compat() {
 }
 
 #=============================================================================
+# TEST 10: Provider flag parsing
+#=============================================================================
+test_provider_flags() {
+    test_header "Provider flag parsing"
+
+    local flags=("aws" "vertex" "apikey" "azure" "vercel" "pro" "ollama")
+
+    for flag in "${flags[@]}"; do
+        if grep -q -- "--$flag)" "$PROJECT_DIR/scripts/ai"; then
+            pass "Provider flag --$flag recognized"
+        else
+            fail "Provider flag --$flag not found"
+        fi
+    done
+}
+
+#=============================================================================
+# TEST 11: Model tier flags
+#=============================================================================
+test_model_flags() {
+    test_header "Model tier flag parsing"
+
+    local flags=("opus" "sonnet" "haiku" "high" "mid" "low")
+
+    for flag in "${flags[@]}"; do
+        if grep -q -- "--$flag)" "$PROJECT_DIR/scripts/ai"; then
+            pass "Model flag --$flag recognized"
+        else
+            fail "Model flag --$flag not found"
+        fi
+    done
+}
+
+#=============================================================================
+# TEST 12: Provider modules exist
+#=============================================================================
+test_provider_modules() {
+    test_header "Provider modules exist"
+
+    local providers=("aws.sh" "vertex.sh" "ollama.sh" "apikey.sh" "azure.sh" "vercel.sh" "pro.sh")
+
+    for provider in "${providers[@]}"; do
+        if [[ -x "$PROJECT_DIR/providers/$provider" ]]; then
+            pass "Provider $provider exists and is executable"
+        else
+            fail "Provider $provider missing or not executable"
+        fi
+    done
+
+    # Also check provider-base.sh
+    if [[ -x "$PROJECT_DIR/providers/provider-base.sh" ]]; then
+        pass "Provider base module exists"
+    else
+        fail "Provider base module missing"
+    fi
+}
+
+#=============================================================================
+# TEST 13: Tool modules exist
+#=============================================================================
+test_tool_modules() {
+    test_header "Tool modules exist"
+
+    if [[ -x "$PROJECT_DIR/tools/claude-code.sh" ]]; then
+        pass "Tool claude-code.sh exists and is executable"
+    else
+        fail "Tool claude-code.sh missing or not executable"
+    fi
+
+    if [[ -x "$PROJECT_DIR/tools/tool-base.sh" ]]; then
+        pass "Tool base module exists"
+    else
+        fail "Tool base module missing"
+    fi
+}
+
+#=============================================================================
+# TEST 14: Utility commands exist
+#=============================================================================
+test_utility_commands() {
+    test_header "Utility commands exist"
+
+    local commands=("airun" "ai-sessions" "ai-status")
+
+    for cmd in "${commands[@]}"; do
+        if command -v "$cmd" &> /dev/null || [[ -x "$PROJECT_DIR/scripts/$cmd" ]]; then
+            pass "Utility command $cmd found"
+        else
+            fail "Utility command $cmd not found"
+        fi
+    done
+}
+
+#=============================================================================
+# TEST 15: Version flag
+#=============================================================================
+test_version_flag() {
+    test_header "Version flag"
+
+    # Check that version handling code exists in ai script
+    if grep -q 'SHOW_VERSION=true' "$PROJECT_DIR/scripts/ai" && \
+       grep -q 'AI_RUNNER_VERSION' "$PROJECT_DIR/scripts/ai"; then
+        pass "--version flag handling exists"
+    else
+        fail "--version flag handling not found"
+    fi
+
+    # Check that VERSION file exists
+    if [[ -f "$PROJECT_DIR/VERSION" ]]; then
+        local version=$(cat "$PROJECT_DIR/VERSION")
+        pass "VERSION file exists: $version"
+    else
+        fail "VERSION file not found"
+    fi
+}
+
+#=============================================================================
 # MAIN
 #=============================================================================
 main() {
@@ -234,6 +351,12 @@ main() {
     test_shell_integration
     test_git_log
     test_backward_compat
+    test_provider_flags
+    test_model_flags
+    test_provider_modules
+    test_tool_modules
+    test_utility_commands
+    test_version_flag
 
     echo ""
     echo "=========================================="

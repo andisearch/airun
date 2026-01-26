@@ -2,18 +2,20 @@
 
 Universal prompt interpreter for AI coding agents.
 
-[![GitHub Stars](https://img.shields.io/github/stars/andisearch/claude-switcher?style=for-the-badge&logo=github)](https://github.com/andisearch/claude-switcher/stargazers)
+Execute markdown prompts as shell scripts. Currently extends [Claude Code](https://claude.ai/code) with multi-provider support.
+
+[![GitHub Stars](https://img.shields.io/github/stars/andisearch/airun?style=for-the-badge&logo=github)](https://github.com/andisearch/airun/stargazers)
 [![Buy Me a Coffee](https://img.shields.io/badge/Buy_Me_A_Coffee-Support-yellow?logo=buy-me-a-coffee&style=for-the-badge)](https://buymeacoffee.com/andisearch)
 
 **What it does:**
 - Executable markdown with `#!/usr/bin/env ai` shebang for script automation
 - Unix pipe support: pipe data into scripts, redirect output, chain in pipelines
-- Provider switching: Ollama (local/free), AWS, Vertex, Azure, Vercel, Anthropic
+- Provider switching: bypass rate limits with Ollama (local/free), AWS, Vertex, Azure, Vercel, Anthropic API
 - Model tiers: `--opus`/`--high`, `--sonnet`/`--mid`, `--haiku`/`--low`
 - Session continuity: `--resume` picks up your last conversation on any provider
 - Non-destructive: plain `claude` always works as before
 
-From [Andi Search](https://andisearch.com). [Star this repo](https://github.com/andisearch/claude-switcher) if it helps!
+From [Andi AI Search](https://andisearch.com). [Star this repo](https://github.com/andisearch/airun) if it helps!
 
 ## Quick Start
 
@@ -22,15 +24,15 @@ From [Andi Search](https://andisearch.com). [Star this repo](https://github.com/
 - Linux (Ubuntu 20.04+, Debian 10+)
 - Windows 10+ via WSL
 
-**Prerequisites**: [Claude Code](https://code.claude.com/docs/en/setup) installed
+**Prerequisites**: [Claude Code](https://claude.ai/code) (Anthropic's AI coding CLI) installed
 
 ```bash
 # Install Claude Code (if not already installed)
 curl -fsSL https://claude.ai/install.sh | bash
 
 # Install AI Runner
-git clone https://github.com/andisearch/claude-switcher.git
-cd claude-switcher && ./setup.sh
+git clone https://github.com/andisearch/airun.git
+cd airun && ./setup.sh
 ```
 
 **That's it!** You can now run any markdown file as an AI script:
@@ -63,6 +65,13 @@ git log -10 | ./summarize.md                  # Feed git history to AI
 curl -fsSL https://andisearch.github.io/ai-scripts/analyze.md | ai
 echo "Explain what a Makefile does" | ai         # Simple prompt
 ```
+
+**Minimal alternative**: If you just want basic executable markdown without installing this repo, add a `ai` script to your PATH:
+```bash
+#!/bin/bash
+claude -p "$(tail -n +2 "$1")"
+```
+This works for simple prompts but lacks provider switching, model selection, stdin piping, output formats, and session isolation. ([credit: apf6](https://www.reddit.com/r/ClaudeAI/comments/1q44kkd/comment/nxpyfui/))
 
 ## Commands
 
@@ -365,8 +374,8 @@ The `--resume` flag lets you pick up a previous conversation exactly where you l
 ### Setup
 
 ```bash
-git clone https://github.com/andisearch/claude-switcher.git
-cd claude-switcher
+git clone https://github.com/andisearch/airun.git
+cd airun
 ./setup.sh
 ```
 
@@ -377,10 +386,36 @@ The setup script installs commands to `/usr/local/bin`, creates `~/.ai-runner/` 
 ### Updating
 
 ```bash
-cd claude-switcher && git pull && ./setup.sh
+cd airun && git pull && ./setup.sh
 ```
 
 Your API keys in `~/.ai-runner/secrets.sh` are preserved.
+
+### Updating from claude-switcher
+
+If you have the original `claude-switcher` installed, just pull and re-run setup:
+
+```bash
+cd claude-switcher && git pull && ./setup.sh
+```
+
+GitHub's redirect ensures git operations continue working with the old remote URL.
+
+**What happens automatically:**
+- Your `~/.claude-switcher/secrets.sh` is migrated to `~/.ai-runner/secrets.sh`
+- All legacy `claude-*` commands continue to work (see Backward Compatibility)
+- Existing `#!/usr/bin/env claude-run` shebangs still work
+
+**Optional cleanup:**
+```bash
+# Rename local directory
+cd .. && mv claude-switcher airun && cd airun
+
+# Update remote to canonical URL
+git remote set-url origin https://github.com/andisearch/airun.git
+```
+
+**New commands:** `ai` / `airun` replace `claude-run` as the primary entry point.
 
 ### Uninstallation
 
@@ -464,11 +499,25 @@ All wrapper scripts are session-scoped:
 
 This project follows [Semantic Versioning](https://semver.org/). See [CHANGELOG.md](CHANGELOG.md) for version history.
 
+## Name History
+
+This project was originally named **claude-switcher** and has been renamed to **AI Runner** (repo: `airun`).
+
+- **2025**: Started as "Claude Switcher" - a tool to switch between Claude Code providers
+- **2026**: Renamed to "AI Runner" - reflecting expanded scope (executable markdown, multi-tool support)
+
+If you found this project searching for "claude-switcher", you're in the right place!
+
+Previous URLs automatically redirect:
+- `github.com/andisearch/claude-switcher` → `github.com/andisearch/airun`
+
+Legacy configuration (`~/.claude-switcher/`) is still supported for backward compatibility.
+
 ## Support
 
 AI Runner is free and open source.
 
-- **[Star on GitHub](https://github.com/andisearch/claude-switcher)** - helps others discover the project
+- **[Star on GitHub](https://github.com/andisearch/airun)** - helps others discover the project
 - **[Buy Me a Coffee](https://buymeacoffee.com/andisearch)** - one-time support
 - **[GitHub Sponsors](https://github.com/sponsors/andisearch)** - supports [Andi AI search](https://andisearch.com)
 
