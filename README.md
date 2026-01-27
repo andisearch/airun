@@ -2,7 +2,7 @@
 
 Universal prompt interpreter for AI coding agents.
 
-Execute markdown prompts as shell scripts. Currently extends [Claude Code](https://claude.ai/code) with multi-provider support.
+Execute markdown prompts as shell scripts. Switch between your subscriptions/providers and API keys on the fly. Currently extends [Claude Code](https://claude.ai/code) with multi-provider support.
 
 [![GitHub Stars](https://img.shields.io/github/stars/andisearch/airun?style=for-the-badge&logo=github)](https://github.com/andisearch/airun/stargazers)
 [![Buy Me a Coffee](https://img.shields.io/badge/Buy_Me_A_Coffee-Support-yellow?logo=buy-me-a-coffee&style=for-the-badge)](https://buymeacoffee.com/andisearch)
