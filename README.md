@@ -10,6 +10,7 @@ Extends [Claude Code](https://claude.ai/code) with on-the-fly cross-cloud provid
 
 [![GitHub Stars](https://img.shields.io/github/stars/andisearch/airun?style=for-the-badge&logo=github)](https://github.com/andisearch/airun/stargazers)
 [![Buy Me a Coffee](https://img.shields.io/badge/Buy_Me_A_Coffee-Support-yellow?logo=buy-me-a-coffee&style=for-the-badge)](https://buymeacoffee.com/andisearch)
+[![Website](https://img.shields.io/badge/Website-airun.me-blue?style=for-the-badge&logo=safari)](https://airun.me)
 
 **What it does:**
 - Executable markdown with `#!/usr/bin/env ai` shebang for script automation
