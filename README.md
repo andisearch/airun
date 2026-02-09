@@ -6,7 +6,7 @@ Run AI prompts like programs. Executable markdown with shebang, Unix pipes, and 
 # Run Claude Code interactivel: any model or provider
 ai                                        # Regular Claude subscription (Pro, Max)
 ai --aws --opus --team --resume           # Resume chats on AWS w/ Opus 4.6 + Agent Teams
-ai --ollama --model qwen3-coder           # Ollama local model
+ai --ollama --bypass --model qwen3-coder  # Ollama local model with bypassPermissions set
 ai --vercel --model openai/gpt-5.2-codex  # Vercel AI Gateway with 100+ models
 
 # Run prompts like programs
