@@ -57,6 +57,8 @@ SET_DEFAULT=false
 CLEAR_DEFAULT=false
 TEAM_MODE=""
 TEAMMATE_MODE=""
+PERMISSION_SHORTCUT=""
+EXPLICIT_PERMISSION_MODE=false
 
 while [[ $# -gt 0 ]]; do
     case $1 in
@@ -126,6 +128,24 @@ while [[ $# -gt 0 ]]; do
             CUSTOM_MODEL="${1#*=}"
             shift ;;
 
+        # Permission shortcuts
+        --skip)    PERMISSION_SHORTCUT="skip"; shift ;;
+        --bypass)  PERMISSION_SHORTCUT="bypass"; shift ;;
+
+        # Permission flags (intercept to track explicit usage)
+        --permission-mode)
+            EXPLICIT_PERMISSION_MODE=true
+            CLAUDE_ARGS+=("$1" "$2")
+            shift 2 ;;
+        --permission-mode=*)
+            EXPLICIT_PERMISSION_MODE=true
+            CLAUDE_ARGS+=("$1")
+            shift ;;
+        --dangerously-skip-permissions)
+            EXPLICIT_PERMISSION_MODE=true
+            CLAUDE_ARGS+=("$1")
+            shift ;;
+
         # Detect markdown file (positional argument ending in .md)
         *.md)
             if [[ -f "$1" ]]; then
@@ -171,6 +191,19 @@ while [[ $# -gt 0 ]]; do
             shift ;;
     esac
 done
+
+# Resolve permission shortcuts (explicit flags take precedence)
+if [[ -n "$PERMISSION_SHORTCUT" ]]; then
+    if [[ "$EXPLICIT_PERMISSION_MODE" == true ]]; then
+        print_warning "--$PERMISSION_SHORTCUT ignored: explicit --permission-mode or --dangerously-skip-permissions takes precedence"
+    else
+        case "$PERMISSION_SHORTCUT" in
+            skip)   CLAUDE_ARGS+=("--dangerously-skip-permissions") ;;
+            bypass) CLAUDE_ARGS+=("--permission-mode" "bypassPermissions") ;;
+        esac
+    fi
+    PERMISSION_SHORTCUT=""  # Clear so shebang parsing doesn't re-resolve
+fi
 
 # Handle --version
 if [[ "$SHOW_VERSION" == true ]]; then
@@ -229,6 +262,8 @@ AGENT TEAMS (experimental):
                       Use --teammate-mode <mode> to control display (in-process, tmux)
 
 OTHER FLAGS:
+  --skip                  Shortcut for --dangerously-skip-permissions
+  --bypass                Shortcut for --permission-mode bypassPermissions
   --output-format <fmt>   Output format: text, json, stream-json
   --stdin-position <pos>  Where to place piped input: 'prepend' (default) or 'append'
   --resume                Resume the most recent conversation
@@ -536,6 +571,11 @@ if [[ -n "$STDIN_CONTENT" ]]; then
                                 --haiku|--low) MODEL_TIER="low" ;;
                             esac
                             ;;
+                        --skip|--bypass)
+                            # Permission shortcuts - only use if not already set by CLI
+                            [[ -z "$PERMISSION_SHORTCUT" && "$EXPLICIT_PERMISSION_MODE" != true ]] && \
+                                PERMISSION_SHORTCUT="${arg#--}"
+                            ;;
                         *)
                             # Other flags pass through
                             CLAUDE_ARGS+=("$arg")
@@ -546,6 +586,18 @@ if [[ -n "$STDIN_CONTENT" ]]; then
         fi
     else
         CONTENT="$STDIN_CONTENT"
+    fi
+
+    # Resolve permission shortcuts from shebang (if not already resolved by CLI)
+    if [[ -n "$PERMISSION_SHORTCUT" ]]; then
+        if [[ "$EXPLICIT_PERMISSION_MODE" == true ]]; then
+            : # CLI explicit flag already takes precedence (warning already shown if from CLI)
+        else
+            case "$PERMISSION_SHORTCUT" in
+                skip)   CLAUDE_ARGS+=("--dangerously-skip-permissions") ;;
+                bypass) CLAUDE_ARGS+=("--permission-mode" "bypassPermissions") ;;
+            esac
+        fi
     fi
 
     # Show status in interactive mode

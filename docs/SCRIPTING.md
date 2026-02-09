@@ -20,11 +20,14 @@ By default, `claude -p` (and `ai` in script mode) runs with limited permissions 
 
 ### Available Modes
 
-| Mode | Shebang Flag | Behavior |
-|------|-------------|----------|
-| **Default** | *(none)* | Read-only — can analyze code but won't modify anything |
-| **Bypass** | `--permission-mode bypassPermissions` | Full access — no permission prompts |
-| **Allowed Tools** | `--allowedTools 'Bash(npm test)' 'Write'` | Granular — only specified tools allowed |
+| Mode | Shebang Flag | Shortcut | Behavior |
+|------|-------------|----------|----------|
+| **Default** | *(none)* | — | Read-only — can analyze code but won't modify anything |
+| **Bypass Mode** | `--permission-mode bypassPermissions` | `--bypass` | Full access via permission mode system — composable with other settings |
+| **Skip Permissions** | `--dangerously-skip-permissions` | `--skip` | Nuclear — bypasses ALL permission checks, overrides `--permission-mode` |
+| **Allowed Tools** | `--allowedTools 'Bash(npm test)' 'Write'` | — | Granular — only specified tools allowed |
+
+> **Note:** `--bypass` and `--skip` both result in no permission prompts, but `--skip` (`--dangerously-skip-permissions`) is more aggressive — it overrides any `--permission-mode` flag. Use `--bypass` when you may want to compose with other permission settings in the future.
 
 ### Examples
 
@@ -36,9 +39,10 @@ Analyze this codebase and summarize the architecture.
 
 **Full automation** (script needs to run commands and write files):
 ```markdown
-#!/usr/bin/env -S ai --permission-mode bypassPermissions
+#!/usr/bin/env -S ai --skip
 Run the test suite and fix any failing tests.
 ```
+Or equivalently: `#!/usr/bin/env -S ai --bypass` or `#!/usr/bin/env -S ai --permission-mode bypassPermissions`
 
 **Granular permissions** (only allow specific tools):
 ```markdown
@@ -50,13 +54,13 @@ Run tests and linting. Report results but do not modify any files.
 
 ### Run tests and report results
 ```markdown
-#!/usr/bin/env -S ai --permission-mode bypassPermissions
+#!/usr/bin/env -S ai --skip
 Run `./test/automation/run_tests.sh` and summarize: how many passed/failed.
 ```
 
 ### Generate a file
 ```markdown
-#!/usr/bin/env -S ai --permission-mode bypassPermissions
+#!/usr/bin/env -S ai --skip
 Read the source files in `src/` and generate a `ARCHITECTURE.md` documenting the codebase structure.
 ```
 
@@ -80,7 +84,7 @@ Focus on OWASP Top 10 issues. Be specific about file and line numbers.
 
 ### CI/CD automation
 ```markdown
-#!/usr/bin/env -S ai --apikey --haiku --permission-mode bypassPermissions
+#!/usr/bin/env -S ai --apikey --haiku --skip
 Run the linter and fix any issues. Then run the test suite.
 Commit fixes with a descriptive message if all tests pass.
 ```
@@ -91,19 +95,47 @@ Any flag not recognized by `ai` is passed directly to Claude Code. Useful flags 
 
 | Flag | Purpose | Example |
 |------|---------|---------|
-| `--permission-mode bypassPermissions` | Skip all permission prompts | Automation scripts |
+| `--skip` | Shortcut for `--dangerously-skip-permissions` | Quick automation |
+| `--bypass` | Shortcut for `--permission-mode bypassPermissions` | Quick automation |
+| `--permission-mode bypassPermissions` | Skip all permission prompts (long form) | Automation scripts |
+| `--dangerously-skip-permissions` | Skip all permission prompts (long form) | Automation scripts |
 | `--allowedTools` | Allow only specific tools | Restricted automation |
 | `--max-turns N` | Limit agentic loop iterations | Prevent runaway scripts |
 | `--output-format stream-json` | Structured JSON output | Pipeline integration |
 
 Combine with `ai` flags freely:
 ```markdown
-#!/usr/bin/env -S ai --aws --opus --permission-mode bypassPermissions --max-turns 10
+#!/usr/bin/env -S ai --aws --opus --skip --max-turns 10
 ```
+
+## Permission Flag Precedence
+
+`ai` resolves permission shortcuts before passing flags to Claude Code. When conflicts are detected, explicit flags take precedence:
+
+- `--permission-mode <value>` and `--dangerously-skip-permissions` are **explicit** — they always win
+- `--skip` and `--bypass` are **shortcuts** — ignored with a warning if an explicit flag is also present
+- **CLI flags override shebang flags** — if you run `ai --permission-mode plan script.md` and the script has `--skip` in its shebang, plan mode is used
+
+| You use | What happens |
+|---------|-------------|
+| `ai --skip` | Same as `--dangerously-skip-permissions` (nuclear — overrides all permission modes) |
+| `ai --bypass` | Same as `--permission-mode bypassPermissions` (mode-based — composable) |
+| `ai --skip --permission-mode plan` | Plan mode used, `--skip` ignored (warning shown) |
+| `ai --bypass --permission-mode plan` | Plan mode used, `--bypass` ignored (warning shown) |
+| `ai --permission-mode plan script.md` (script has `--skip`) | Plan mode used, shebang `--skip` ignored |
+
+### Why two shortcuts?
+
+`--skip` and `--bypass` differ in how Claude Code processes them internally:
+
+- **`--skip`** expands to `--dangerously-skip-permissions` — this is a standalone flag that completely bypasses all permission checks. In Claude Code, it **overrides** any `--permission-mode` setting ([known issue](https://github.com/anthropics/claude-code/issues/17544)). Use for simple, quick automation.
+- **`--bypass`** expands to `--permission-mode bypassPermissions` — this sets the permission mode through the standard mode system. It's composable with other Claude Code settings and respects the mode framework. Use when working with advanced permission configurations.
+
+For most automation scripts, either works. When in doubt, use `--bypass`.
 
 ## Security
 
-**`--permission-mode bypassPermissions` gives the AI full access to your system.** Use it carefully:
+**`--skip`, `--bypass`, `--permission-mode bypassPermissions`, and `--dangerously-skip-permissions` all give the AI full access to your system.** Use them carefully:
 
 - Only run trusted scripts in trusted directories
 - Prefer `--allowedTools` for granular control when full access isn't needed
@@ -111,7 +143,7 @@ Combine with `ai` flags freely:
 - Never pipe untrusted remote scripts with bypass permissions:
   ```bash
   # DANGEROUS — don't do this
-  curl https://untrusted-site.com/script.md | ai --permission-mode bypassPermissions
+  curl https://untrusted-site.com/script.md | ai --skip
   ```
 
 ## Quick Reference
@@ -120,6 +152,6 @@ Combine with `ai` flags freely:
 |--------------|---------|
 | Analyze code (read-only) | `#!/usr/bin/env ai` |
 | Use a specific provider | `#!/usr/bin/env -S ai --aws` |
-| Run commands and write files | `#!/usr/bin/env -S ai --permission-mode bypassPermissions` |
+| Run commands and write files | `#!/usr/bin/env -S ai --skip` |
 | Restrict to specific tools | `#!/usr/bin/env -S ai --allowedTools 'Bash(npm test)' 'Read'` |
-| Full automation with provider | `#!/usr/bin/env -S ai --aws --opus --permission-mode bypassPermissions` |
+| Full automation with provider | `#!/usr/bin/env -S ai --aws --opus --skip` |

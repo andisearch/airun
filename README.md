@@ -172,9 +172,10 @@ Review this PR for security issues. Stream output in real-time.
 
 **Scripts that write files or run commands** need a permission mode:
 ```markdown
-#!/usr/bin/env -S ai --permission-mode bypassPermissions
+#!/usr/bin/env -S ai --skip
 Run ./test/automation/run_tests.sh and report results.
 ```
+(`--skip` is a shortcut for `--dangerously-skip-permissions`. See also `--bypass` for `--permission-mode bypassPermissions`.)
 
 ```markdown
 #!/usr/bin/env -S ai --allowedTools 'Bash(npm test)' 'Read'
@@ -191,7 +192,7 @@ ai --opus task.md                  # Override: use Opus instead
 
 > **Tip:** Use `#!/usr/bin/env -S` (with `-S`) to pass flags in the shebang line. Standard `env` only accepts one argument, so `#!/usr/bin/env ai --aws` won't work — you need `-S` to split the string.
 
-> **Warning:** Executable markdown with `--permission-mode bypassPermissions` gives the AI full system access. Only run trusted scripts in trusted directories. Use `--allowedTools` for granular control. See **[docs/SCRIPTING.md](docs/SCRIPTING.md)** for details.
+> **Warning:** `--skip`, `--bypass`, and `--permission-mode bypassPermissions` give the AI full system access. Only run trusted scripts in trusted directories. Use `--allowedTools` for granular control. See **[docs/SCRIPTING.md](docs/SCRIPTING.md)** for details.
 
 See **[docs/SCRIPTING.md](docs/SCRIPTING.md)** for the full scripting & automation guide — permission modes, Claude Code flag pass-through, CI/CD patterns, and security best practices.
 

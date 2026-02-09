@@ -352,6 +352,8 @@ SET_DEFAULT=false
 CLEAR_DEFAULT=false
 TEAM_MODE=""
 TEAMMATE_MODE=""
+PERMISSION_SHORTCUT=""
+EXPLICIT_PERMISSION_MODE=false
 
 while [[ $# -gt 0 ]]; do
     case $1 in
@@ -377,6 +379,11 @@ while [[ $# -gt 0 ]]; do
         --team|--teams) TEAM_MODE="enabled"; shift ;;
         --teammate-mode) TEAMMATE_MODE="$2"; CLAUDE_ARGS+=("$1" "$2"); shift 2 ;;
         --teammate-mode=*) TEAMMATE_MODE="${1#*=}"; CLAUDE_ARGS+=("$1"); shift ;;
+        --skip) PERMISSION_SHORTCUT="skip"; shift ;;
+        --bypass) PERMISSION_SHORTCUT="bypass"; shift ;;
+        --permission-mode) EXPLICIT_PERMISSION_MODE=true; CLAUDE_ARGS+=("$1" "$2"); shift 2 ;;
+        --permission-mode=*) EXPLICIT_PERMISSION_MODE=true; CLAUDE_ARGS+=("$1"); shift ;;
+        --dangerously-skip-permissions) EXPLICIT_PERMISSION_MODE=true; CLAUDE_ARGS+=("$1"); shift ;;
         --opus|--high) MODEL_TIER="high"; shift ;;
         --sonnet|--mid) MODEL_TIER="mid"; shift ;;
         --haiku|--low) MODEL_TIER="low"; shift ;;
@@ -403,6 +410,19 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
+# Resolve permission shortcuts (explicit flags take precedence)
+if [[ -n "$PERMISSION_SHORTCUT" ]]; then
+    if [[ "$EXPLICIT_PERMISSION_MODE" == true ]]; then
+        print_warning "--$PERMISSION_SHORTCUT ignored: explicit --permission-mode or --dangerously-skip-permissions takes precedence"
+    else
+        case "$PERMISSION_SHORTCUT" in
+            skip)   CLAUDE_ARGS+=("--dangerously-skip-permissions") ;;
+            bypass) CLAUDE_ARGS+=("--permission-mode" "bypassPermissions") ;;
+        esac
+    fi
+    PERMISSION_SHORTCUT=""  # Clear so shebang parsing doesn't re-resolve
+fi
+
 [[ "$SHOW_VERSION" == true ]] && { echo "ai-runner v$AI_RUNNER_VERSION"; exit 0; }
 
 [[ "$SHOW_HELP" == true ]] && {
@@ -424,6 +444,10 @@ PROVIDER FLAGS:
 
 MODEL FLAGS:
   --opus/--high, --sonnet/--mid, --haiku/--low, --model <id>
+
+PERMISSION SHORTCUTS:
+  --skip            Shortcut for --dangerously-skip-permissions
+  --bypass          Shortcut for --permission-mode bypassPermissions
 
 Run 'ai --help' in dev mode for full help.
 EOF
