@@ -79,6 +79,8 @@ _parse_shebang_flags() {
                 SHEBANG_PERMISSION_SHORTCUT="skip" ;;
             --bypass)
                 SHEBANG_PERMISSION_SHORTCUT="bypass" ;;
+            --cc)
+                ;; # consumed by CLI parser, ignore in shebang re-parse
             *)
                 # Pass through unrecognized flags (--chrome, --max-turns, etc.)
                 SHEBANG_PASSTHROUGH+=("$arg") ;;
