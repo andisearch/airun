@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1200">
+<title>OG Image — AIRun</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  width: 1200px;
+  height: 630px;
+  overflow: hidden;
+  background: #0a0e14;
+  font-family: 'JetBrains Mono', monospace;
+  position: relative;
+}
+
+/* === STARFIELD === */
+.stars {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+.star {
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.4);
+}
+.star.green { background: rgba(0,255,170,0.3); }
+.star.cyan { background: rgba(34,211,238,0.2); }
+
+/* === SCANLINES === */
+.scanlines {
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0,255,170,0.018) 2px,
+    rgba(0,255,170,0.018) 4px
+  );
+  pointer-events: none;
+  z-index: 50;
+}
+
+/* === GLOW FIELDS === */
+.glow-primary {
+  position: absolute;
+  top: 50%;
+  left: 180px;
+  transform: translateY(-50%);
+  width: 500px;
+  height: 500px;
+  background: radial-gradient(circle, rgba(0,255,170,0.07) 0%, rgba(0,255,170,0.02) 40%, transparent 70%);
+  pointer-events: none;
+}
+.glow-secondary {
+  position: absolute;
+  top: -80px;
+  right: 100px;
+  width: 400px;
+  height: 400px;
+  background: radial-gradient(circle, rgba(34,211,238,0.03) 0%, transparent 60%);
+  pointer-events: none;
+}
+.glow-bottom {
+  position: absolute;
+  bottom: -100px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 800px;
+  height: 300px;
+  background: radial-gradient(ellipse, rgba(0,255,170,0.04) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+/* === GRID LINES (subtle) === */
+.grid-overlay {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(0,255,170,0.015) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,255,170,0.015) 1px, transparent 1px);
+  background-size: 60px 60px;
+  mask-image: radial-gradient(ellipse 60% 50% at 30% 50%, rgba(0,0,0,0.4) 0%, transparent 100%);
+  -webkit-mask-image: radial-gradient(ellipse 60% 50% at 30% 50%, rgba(0,0,0,0.4) 0%, transparent 100%);
+  pointer-events: none;
+}
+
+/* === MAIN LAYOUT === */
+.layout {
+  position: relative;
+  z-index: 10;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  padding: 0 80px;
+  gap: 56px;
+}
+
+/* === LOGO === */
+.logo-wrap {
+  position: relative;
+  flex-shrink: 0;
+}
+.logo-bloom {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 220px;
+  height: 220px;
+  background: radial-gradient(circle, rgba(0,255,170,0.15) 0%, rgba(34,211,238,0.05) 50%, transparent 70%);
+  border-radius: 50%;
+  filter: blur(20px);
+}
+.logo-img {
+  position: relative;
+  width: 140px;
+  height: 140px;
+  border-radius: 24px;
+  object-fit: cover;
+  box-shadow:
+    0 0 40px rgba(0,255,170,0.2),
+    0 0 80px rgba(0,255,170,0.08),
+    0 4px 20px rgba(0,0,0,0.5);
+  border: 1px solid rgba(0,255,170,0.15);
+}
+
+/* === CONTENT === */
+.content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.title {
+  font-family: 'Space Mono', monospace;
+  font-weight: 700;
+  font-size: 72px;
+  letter-spacing: -3px;
+  line-height: 1;
+  color: #e6edf3;
+}
+.title .accent { color: #00ffaa; }
+
+.tagline {
+  font-size: 20px;
+  color: #6e7a88;
+  line-height: 1.4;
+  letter-spacing: -0.3px;
+  max-width: 520px;
+}
+
+/* === TERMINAL SNIPPET === */
+.terminal-snippet {
+  margin-top: 8px;
+  background: rgba(13,17,23,0.8);
+  border: 1px solid rgba(28,38,51,0.8);
+  border-radius: 8px;
+  padding: 14px 18px;
+  max-width: 540px;
+  font-size: 14px;
+  line-height: 1.8;
+  position: relative;
+  overflow: hidden;
+}
+.terminal-snippet::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(0,255,170,0.3), transparent);
+}
+.terminal-dots {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+.terminal-dots span {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+.terminal-dots span:nth-child(1) { background: #ff6b6b; }
+.terminal-dots span:nth-child(2) { background: #ffb347; }
+.terminal-dots span:nth-child(3) { background: #00cc88; }
+
+.t-green { color: #00ffaa; }
+.t-cyan { color: #22d3ee; }
+.t-dim { color: #6e7a88; }
+.t-bright { color: #c9d1d9; }
+.t-purple { color: #c084fc; }
+.t-amber { color: #ffb347; }
+
+/* === FOOTER === */
+.footer {
+  position: absolute;
+  bottom: 28px;
+  right: 80px;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  font-size: 20px;
+}
+.footer-url {
+  color: #00ffaa;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+.footer-sep {
+  color: rgba(0,255,170,0.25);
+}
+.footer-by {
+  color: #8b95a3;
+  font-size: 18px;
+  font-weight: 500;
+}
+
+/* === CORNER DECORATIONS === */
+.corner {
+  position: absolute;
+  z-index: 10;
+  width: 20px;
+  height: 20px;
+}
+.corner-tl {
+  top: 20px; left: 20px;
+  border-top: 1px solid rgba(0,255,170,0.15);
+  border-left: 1px solid rgba(0,255,170,0.15);
+}
+.corner-tr {
+  top: 20px; right: 20px;
+  border-top: 1px solid rgba(0,255,170,0.15);
+  border-right: 1px solid rgba(0,255,170,0.15);
+}
+.corner-bl {
+  bottom: 20px; left: 20px;
+  border-bottom: 1px solid rgba(0,255,170,0.15);
+  border-left: 1px solid rgba(0,255,170,0.15);
+}
+.corner-br {
+  bottom: 20px; right: 20px;
+  border-bottom: 1px solid rgba(0,255,170,0.15);
+  border-right: 1px solid rgba(0,255,170,0.15);
+}
+
+/* === EDGE LINES === */
+.edge-top {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent 5%, rgba(0,255,170,0.08) 30%, rgba(0,255,170,0.08) 70%, transparent 95%);
+  z-index: 10;
+}
+.edge-bottom {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent 5%, rgba(0,255,170,0.08) 30%, rgba(0,255,170,0.08) 70%, transparent 95%);
+  z-index: 10;
+}
+</style>
+</head>
+<body>
+
+<!-- Starfield (generated inline for deterministic rendering) -->
+<div class="stars" id="stars"></div>
+
+<!-- Atmosphere -->
+<div class="glow-primary"></div>
+<div class="glow-secondary"></div>
+<div class="glow-bottom"></div>
+<div class="grid-overlay"></div>
+<div class="scanlines"></div>
+
+<!-- Corner brackets -->
+<div class="corner corner-tl"></div>
+<div class="corner corner-tr"></div>
+<div class="corner corner-bl"></div>
+<div class="corner corner-br"></div>
+<div class="edge-top"></div>
+<div class="edge-bottom"></div>
+
+<!-- Main content -->
+<div class="layout">
+  <div class="logo-wrap">
+    <div class="logo-bloom"></div>
+    <img src="logo.jpg" alt="AIRun" class="logo-img">
+  </div>
+
+  <div class="content">
+    <div class="title">AI<span class="accent">Run</span></div>
+    <div class="tagline">Run AI prompts like programs.<br>Free and open source.</div>
+    <div class="terminal-snippet">
+      <div class="terminal-dots"><span></span><span></span><span></span></div>
+      <div><span class="t-green">#!/usr/bin/env ai</span></div>
+      <div><span class="t-dim">$ </span><span class="t-bright">cat</span> <span class="t-purple">data.json</span> <span class="t-cyan">|</span> <span class="t-bright">./analyze.md</span> <span class="t-cyan">></span> <span class="t-purple">results.txt</span></div>
+      <div><span class="t-dim">$ </span><span class="t-bright">ai</span> <span class="t-amber">--vercel</span> <span class="t-amber">--model</span> <span class="t-purple">openai/gpt-5.2-codex</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- Footer -->
+<div class="footer">
+  <span class="footer-by">by Andi AI</span>
+  <span class="footer-sep">|</span>
+  <span class="footer-url">airun.me</span>
+</div>
+
+<script>
+// Deterministic starfield
+(function() {
+  const container = document.getElementById('stars');
+  const stars = [
+    // Scattered white dots
+    [82,45,1.2,''], [340,120,0.8,''], [590,30,1.0,''], [780,95,0.6,''],
+    [950,55,1.1,''], [1120,140,0.7,''], [160,280,0.9,''], [430,350,0.6,''],
+    [700,290,1.0,''], [880,380,0.8,''], [1050,320,0.7,''], [200,500,0.6,''],
+    [520,550,0.9,''], [850,530,0.7,''], [1100,490,1.0,''], [60,180,0.5,''],
+    [310,470,0.6,''], [640,440,0.8,''], [990,200,0.5,''], [1150,580,0.6,''],
+    [45,400,0.7,''], [270,60,0.5,''], [480,190,0.6,''], [750,510,0.8,''],
+    [1020,430,0.5,''], [130,590,0.7,''], [390,250,0.5,''], [560,480,0.6,''],
+    [820,160,0.7,''], [1080,260,0.5,''],
+    // Green accent dots
+    [180,140,1.0,'green'], [670,70,0.8,'green'], [1000,150,0.9,'green'],
+    [350,520,0.7,'green'], [900,460,0.8,'green'], [50,320,0.6,'green'],
+    [1140,370,0.7,'green'],
+    // Cyan accent dots
+    [440,100,0.7,'cyan'], [810,310,0.6,'cyan'], [120,450,0.8,'cyan'],
+    [960,570,0.6,'cyan'], [280,380,0.5,'cyan'],
+  ];
+  stars.forEach(([x, y, size, cls]) => {
+    const el = document.createElement('div');
+    el.className = 'star' + (cls ? ' ' + cls : '');
+    el.style.cssText = `left:${x}px;top:${y}px;width:${size}px;height:${size}px;`;
+    container.appendChild(el);
+  });
+})();
+</script>
+</body>
+</html>
