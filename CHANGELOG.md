@@ -11,6 +11,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **`--live` output splitting**: System prompt no longer hints at markdown headings, improving non-markdown output (code, JSON, plain text)
 - **`--live` "Done" message**: Changed "written to file" to "written" — the message appears for pipes too, not just file redirects
 
+### Improved
+- **`--live` documentation**: Explain turn-level streaming granularity and the need for narration instructions in prompts (e.g., "print your findings as you go") for intermediate output to stream
+
 ## [2.3.3] - 2026-02-12
 
 ### Fixed
