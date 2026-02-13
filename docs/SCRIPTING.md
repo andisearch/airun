@@ -93,11 +93,24 @@ Commit fixes with a descriptive message if all tests pass.
 
 By default, `ai` in script mode waits for the full response before printing anything. Use `--live` to stream text to the terminal as it's generated — useful for long-running scripts where you want to see progress in real-time.
 
-### Text automation with live output
+### How streaming works
+
+`--live` streams at **turn granularity** — each time Claude writes a text response between tool calls, that text appears immediately. This means your prompt needs to tell Claude to narrate its progress, otherwise it may silently use tools and only output text at the end.
+
+**Streams incrementally** (Claude narrates between tool calls):
 ```markdown
 #!/usr/bin/env -S ai --skip --live
-Run the test suite and report results step by step.
+Explore this repository. Print a brief summary after examining each
+directory. Finally, generate a concise report in markdown format.
 ```
+
+**No intermediate output** (Claude works silently, then reports):
+```markdown
+#!/usr/bin/env -S ai --skip --live
+Explore this repository and write a summary.
+```
+
+Both produce the same final result, but only the first streams progress to the terminal. The key is phrases like **"print as you go"**, **"step by step"**, or **"describe what you find"** — these prompt Claude to write text between tool calls, giving `--live` something to stream.
 
 ### Piped content with live streaming
 ```bash

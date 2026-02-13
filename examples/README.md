@@ -38,7 +38,7 @@ ai live-report.md > report.txt
 
 - **No flags** = read-only (can analyze code but won't modify anything)
 - **`--skip`** = full automation (can run commands, write files, use tools)
-- **`--live`** = stream text as it's generated (useful for long-running scripts). When redirecting to a file (`> report.md`), narration streams to stderr while clean content goes to the file.
+- **`--live`** = stream text as it's generated. Streams at turn granularity — your prompt should tell Claude to narrate progress (e.g., "print your findings as you go") so there's text to stream between tool calls. When redirecting to a file (`> report.md`), narration streams to stderr while clean content goes to the file.
 - **Stdin piping** = pipe data in with `cat file | ./script.md`
 - **CLI overrides shebang** = `ai --aws script.md` overrides the script's shebang provider
 - **Shebang overrides defaults** = shebang flags beat `--set-default` preferences

@@ -136,7 +136,7 @@ ai --high task.md                 # Same as --opus
 ai --mid task.md                  # Same as --sonnet
 ai --low task.md                  # Same as --haiku
 
-# Stream output in real-time (instead of waiting for completion)
+# Stream output in real-time (prompt should say "print as you go" or similar)
 ai --live --skip task.md
 
 # Live output + file redirect (narration to console, clean content to file)
