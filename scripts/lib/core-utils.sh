@@ -126,7 +126,7 @@ load_config_quiet() {
 DEFAULTS_FILE="${CONFIG_DIR}/defaults.sh"
 
 load_defaults() {
-    [ -f "$DEFAULTS_FILE" ] && source "$DEFAULTS_FILE"
+    [ -f "$DEFAULTS_FILE" ] && source "$DEFAULTS_FILE" || true
 }
 
 save_defaults() {

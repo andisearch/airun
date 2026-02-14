@@ -1212,6 +1212,404 @@ MD
 }
 
 #=============================================================================
+# TEST 34: set -e safety (functions return 0 on no-op paths)
+#=============================================================================
+test_set_e_safety() {
+    test_header "set -e safety for utility functions"
+
+    local ai_script="$PROJECT_DIR/scripts/ai"
+
+    # Extract _parse_shebang_flags and test under set -e
+    local func_code
+    func_code=$(sed -n '/_parse_shebang_flags()/,/^}/p' "$ai_script")
+
+    # Test with bare shebang (no flags) — must not exit under set -e
+    local result
+    result=$(bash -c "set -e; $func_code; _parse_shebang_flags '#!/usr/bin/env ai'; echo OK" 2>&1)
+    if [[ "$result" == *"OK"* ]]; then
+        pass "_parse_shebang_flags returns 0 for bare shebang under set -e"
+    else
+        fail "_parse_shebang_flags fails under set -e for bare shebang"
+    fi
+
+    # Test with non-ai shebang — must not exit under set -e
+    result=$(bash -c "set -e; $func_code; _parse_shebang_flags '#!/bin/bash'; echo OK" 2>&1)
+    if [[ "$result" == *"OK"* ]]; then
+        pass "_parse_shebang_flags returns 0 for non-ai shebang under set -e"
+    else
+        fail "_parse_shebang_flags fails under set -e for non-ai shebang"
+    fi
+
+    # Test load_defaults under set -e with no defaults file
+    result=$(bash -c "
+        source '$PROJECT_DIR/scripts/lib/core-utils.sh'
+        set -e
+        DEFAULTS_FILE='/nonexistent/path/defaults.sh'
+        load_defaults
+        echo OK
+    " 2>&1)
+    if [[ "$result" == *"OK"* ]]; then
+        pass "load_defaults returns 0 under set -e with no defaults file"
+    else
+        fail "load_defaults fails under set -e with no defaults file"
+    fi
+
+    # Verify return 0 in _parse_shebang_flags (sync check)
+    if grep -q 'return 0' "$ai_script" && grep -q 'return 0' "$PROJECT_DIR/setup.sh"; then
+        pass "_parse_shebang_flags has explicit return 0 in both files"
+    else
+        fail "_parse_shebang_flags missing explicit return 0"
+    fi
+}
+
+#=============================================================================
+# TEST 35: Front-matter function sync (scripts/ai vs setup.sh)
+#=============================================================================
+test_front_matter_function_sync() {
+    test_header "Front-matter function sync (scripts/ai vs setup.sh)"
+
+    local ai_script="$PROJECT_DIR/scripts/ai"
+    local setup_script="$PROJECT_DIR/setup.sh"
+
+    for func in _parse_front_matter _apply_var_overrides _substitute_vars; do
+        if grep -q "$func" "$ai_script" && grep -q "$func" "$setup_script"; then
+            pass "$func exists in both files"
+        else
+            fail "$func not synced between scripts/ai and setup.sh"
+        fi
+    done
+
+    # Check VAR_NAMES/VAR_VALUES in both
+    if grep -q 'VAR_NAMES' "$ai_script" && grep -q 'VAR_NAMES' "$setup_script"; then
+        pass "VAR_NAMES variable in both files"
+    else
+        fail "VAR_NAMES not synced"
+    fi
+
+    if grep -q 'FRONT_MATTER_END' "$ai_script" && grep -q 'FRONT_MATTER_END' "$setup_script"; then
+        pass "FRONT_MATTER_END variable in both files"
+    else
+        fail "FRONT_MATTER_END not synced"
+    fi
+}
+
+#=============================================================================
+# TEST 35: Front-matter parsing functional test
+#=============================================================================
+test_front_matter_parsing() {
+    test_header "Front-matter parsing functional test"
+
+    local ai_script="$PROJECT_DIR/scripts/ai"
+
+    # Source just the functions (extract them)
+    # We need _parse_front_matter, _apply_var_overrides, _substitute_vars
+    local test_dir="$OUTPUT_DIR/frontmatter-$$"
+    mkdir -p "$test_dir"
+
+    # Extract the three front-matter functions from scripts/ai
+    sed -n '/_parse_front_matter()/,/^# Capture stdin/p' "$ai_script" | sed '$d' > "$test_dir/funcs.sh"
+
+    # Test 1: Basic vars parsing
+    cat > "$test_dir/test-parse.sh" << 'TESTSCRIPT'
+#!/bin/bash
+source "$1"
+
+CONTENT="---
+vars:
+  topic: machine learning
+  style: casual
+---
+Write about {{topic}} in {{style}} style."
+
+if _parse_front_matter "$CONTENT"; then
+    echo "PARSE_OK"
+    echo "NAMES=${VAR_NAMES[*]}"
+    echo "VALUES=${VAR_VALUES[*]}"
+    echo "END=$FRONT_MATTER_END"
+else
+    echo "PARSE_FAIL"
+fi
+TESTSCRIPT
+
+    local output
+    output=$(bash "$test_dir/test-parse.sh" "$test_dir/funcs.sh" 2>&1)
+
+    if echo "$output" | grep -q "PARSE_OK"; then
+        pass "Front-matter parsed successfully"
+    else
+        fail "Front-matter parsing failed: $output"
+    fi
+
+    if echo "$output" | grep -q "NAMES=topic style"; then
+        pass "Variable names extracted correctly"
+    else
+        fail "Variable names wrong: $output"
+    fi
+
+    if echo "$output" | grep -q 'VALUES=machine learning casual'; then
+        pass "Variable values extracted correctly"
+    else
+        fail "Variable values wrong: $output"
+    fi
+
+    if echo "$output" | grep -q "END=5"; then
+        pass "FRONT_MATTER_END line count correct"
+    else
+        fail "FRONT_MATTER_END wrong: $output"
+    fi
+
+    # Test 2: No front-matter (should return 1)
+    cat > "$test_dir/test-nofm.sh" << 'TESTSCRIPT'
+#!/bin/bash
+source "$1"
+CONTENT="Just a plain prompt."
+if _parse_front_matter "$CONTENT"; then
+    echo "SHOULD_NOT_PARSE"
+else
+    echo "NO_FM_OK"
+fi
+TESTSCRIPT
+
+    output=$(bash "$test_dir/test-nofm.sh" "$test_dir/funcs.sh" 2>&1)
+    if echo "$output" | grep -q "NO_FM_OK"; then
+        pass "No front-matter returns 1 (content unchanged)"
+    else
+        fail "No front-matter detection failed: $output"
+    fi
+
+    # Test 3: Unset vars (key with no value)
+    cat > "$test_dir/test-unset.sh" << 'TESTSCRIPT'
+#!/bin/bash
+source "$1"
+CONTENT="---
+vars:
+  required:
+  optional: default
+---
+Test"
+
+if _parse_front_matter "$CONTENT"; then
+    if [[ "${VAR_VALUES[0]}" == "__AI_VAR_UNSET__" ]]; then
+        echo "UNSET_OK"
+    else
+        echo "UNSET_FAIL: ${VAR_VALUES[0]}"
+    fi
+    if [[ "${VAR_VALUES[1]}" == "default" ]]; then
+        echo "DEFAULT_OK"
+    else
+        echo "DEFAULT_FAIL: ${VAR_VALUES[1]}"
+    fi
+fi
+TESTSCRIPT
+
+    output=$(bash "$test_dir/test-unset.sh" "$test_dir/funcs.sh" 2>&1)
+    if echo "$output" | grep -q "UNSET_OK"; then
+        pass "Unset vars use sentinel __AI_VAR_UNSET__"
+    else
+        fail "Unset var detection failed: $output"
+    fi
+    if echo "$output" | grep -q "DEFAULT_OK"; then
+        pass "Vars with defaults extracted correctly"
+    else
+        fail "Default var extraction failed: $output"
+    fi
+
+    rm -rf "$test_dir"
+}
+
+#=============================================================================
+# TEST 36: Front-matter substitution test
+#=============================================================================
+test_front_matter_substitution() {
+    test_header "Front-matter substitution test"
+
+    local ai_script="$PROJECT_DIR/scripts/ai"
+    local test_dir="$OUTPUT_DIR/fm-subst-$$"
+    mkdir -p "$test_dir"
+
+    # Extract functions
+    sed -n '/_parse_front_matter()/,/^# Capture stdin/p' "$ai_script" | sed '$d' > "$test_dir/funcs.sh"
+
+    # Test substitution with defaults
+    cat > "$test_dir/test-subst.sh" << 'TESTSCRIPT'
+#!/bin/bash
+source "$1"
+
+CONTENT="---
+vars:
+  topic: AI safety
+  style: formal
+  unset_var:
+---
+Write about {{topic}} in {{style}} style. Also {{unset_var}}."
+
+if _parse_front_matter "$CONTENT"; then
+    # Strip front-matter
+    n=0; tmp=""
+    while IFS= read -r _line; do
+        n=$((n + 1))
+        [[ $n -le $FRONT_MATTER_END ]] && continue
+        [[ -n "$tmp" ]] && tmp="$tmp"$'\n'"$_line" || tmp="$_line"
+    done <<< "$CONTENT"
+    CONTENT="$tmp"
+    _substitute_vars
+    echo "$CONTENT"
+fi
+TESTSCRIPT
+
+    local output
+    output=$(bash "$test_dir/test-subst.sh" "$test_dir/funcs.sh" 2>&1)
+
+    if echo "$output" | grep -q "Write about AI safety"; then
+        pass "{{topic}} substituted with default"
+    else
+        fail "{{topic}} substitution failed: $output"
+    fi
+
+    if echo "$output" | grep -q "in formal style"; then
+        pass "{{style}} substituted with default"
+    else
+        fail "{{style}} substitution failed: $output"
+    fi
+
+    if echo "$output" | grep -q '{{unset_var}}'; then
+        pass "{{unset_var}} left as-is (no default)"
+    else
+        fail "Unset var not preserved: $output"
+    fi
+
+    rm -rf "$test_dir"
+}
+
+#=============================================================================
+# TEST 37: Front-matter CLI override consumption
+#=============================================================================
+test_front_matter_cli_override() {
+    test_header "Front-matter CLI override consumption"
+
+    local ai_script="$PROJECT_DIR/scripts/ai"
+    local test_dir="$OUTPUT_DIR/fm-override-$$"
+    mkdir -p "$test_dir"
+
+    # Extract functions
+    sed -n '/_parse_front_matter()/,/^# Capture stdin/p' "$ai_script" | sed '$d' > "$test_dir/funcs.sh"
+
+    # Test --key value override
+    cat > "$test_dir/test-override.sh" << 'TESTSCRIPT'
+#!/bin/bash
+source "$1"
+
+VAR_NAMES=(topic style)
+VAR_VALUES=("default topic" "casual")
+CLAUDE_ARGS=("--topic" "override topic" "--verbose" "--style=formal")
+
+_apply_var_overrides
+
+echo "TOPIC=${VAR_VALUES[0]}"
+echo "STYLE=${VAR_VALUES[1]}"
+echo "ARGS=${CLAUDE_ARGS[*]}"
+TESTSCRIPT
+
+    local output
+    output=$(bash "$test_dir/test-override.sh" "$test_dir/funcs.sh" 2>&1)
+
+    if echo "$output" | grep -q "TOPIC=override topic"; then
+        pass "--topic value consumed and applied"
+    else
+        fail "--topic override failed: $output"
+    fi
+
+    if echo "$output" | grep -q "STYLE=formal"; then
+        pass "--style=value (equals form) consumed and applied"
+    else
+        fail "--style=value override failed: $output"
+    fi
+
+    if echo "$output" | grep -q "ARGS=--verbose"; then
+        pass "Non-matching --verbose preserved in CLAUDE_ARGS"
+    else
+        fail "Non-matching args not preserved: $output"
+    fi
+
+    # Verify consumed args are removed
+    if echo "$output" | grep "ARGS=" | grep -qv -- "--topic"; then
+        pass "--topic consumed (removed from CLAUDE_ARGS)"
+    else
+        fail "--topic not consumed from CLAUDE_ARGS: $output"
+    fi
+
+    rm -rf "$test_dir"
+}
+
+#=============================================================================
+# TEST 38: Front-matter help text
+#=============================================================================
+test_front_matter_help_text() {
+    test_header "Front-matter help text"
+
+    local ai_script="$PROJECT_DIR/scripts/ai"
+    local setup_script="$PROJECT_DIR/setup.sh"
+
+    # Check help text mentions vars/front-matter in scripts/ai
+    if grep -q 'Script variables:' "$ai_script"; then
+        pass "scripts/ai help text has 'Script variables:' section"
+    else
+        fail "scripts/ai help text missing 'Script variables:' section"
+    fi
+
+    if grep -q '{{varname}}' "$ai_script"; then
+        pass "scripts/ai help text mentions {{varname}}"
+    else
+        fail "scripts/ai help text missing {{varname}}"
+    fi
+
+    # Check setup.sh too
+    if grep -q 'Script variables:' "$setup_script"; then
+        pass "setup.sh help text has 'Script variables:' section"
+    else
+        fail "setup.sh help text missing 'Script variables:' section"
+    fi
+
+    if grep -q '{{varname}}' "$setup_script"; then
+        pass "setup.sh help text mentions {{varname}}"
+    else
+        fail "setup.sh help text missing {{varname}}"
+    fi
+}
+
+#=============================================================================
+# TEST 39: Front-matter example script exists
+#=============================================================================
+test_front_matter_example() {
+    test_header "Front-matter example script"
+
+    if [[ -f "$PROJECT_DIR/examples/summarize-topic.md" ]]; then
+        pass "examples/summarize-topic.md exists"
+    else
+        fail "examples/summarize-topic.md not found"
+        return
+    fi
+
+    if [[ -x "$PROJECT_DIR/examples/summarize-topic.md" ]]; then
+        pass "examples/summarize-topic.md is executable"
+    else
+        fail "examples/summarize-topic.md not executable"
+    fi
+
+    if grep -q 'vars:' "$PROJECT_DIR/examples/summarize-topic.md"; then
+        pass "Example has vars: block"
+    else
+        fail "Example missing vars: block"
+    fi
+
+    if grep -q '{{' "$PROJECT_DIR/examples/summarize-topic.md"; then
+        pass "Example has {{}} placeholders"
+    else
+        fail "Example missing {{}} placeholders"
+    fi
+}
+
+#=============================================================================
 # MAIN
 #=============================================================================
 main() {
@@ -1257,6 +1655,13 @@ main() {
     test_env_isolation_heredoc_sync
     test_env_isolation_completeness
     test_env_isolation_functional
+    test_set_e_safety
+    test_front_matter_function_sync
+    test_front_matter_parsing
+    test_front_matter_substitution
+    test_front_matter_cli_override
+    test_front_matter_help_text
+    test_front_matter_example
 
     echo ""
     echo "=========================================="

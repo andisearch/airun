@@ -89,6 +89,42 @@ Run the linter and fix any issues. Then run the test suite.
 Commit fixes with a descriptive message if all tests pass.
 ```
 
+## Variables
+
+Scripts can declare variables with defaults using YAML front-matter. Users override them from the CLI without editing the script.
+
+### Syntax
+
+```markdown
+#!/usr/bin/env -S ai --haiku
+---
+vars:
+  topic: "machine learning"
+  style: casual
+  audience:
+---
+Write a summary of {{topic}} in {{style}} style.
+Target audience: {{audience}}.
+```
+
+### CLI Overrides
+
+```bash
+./script.md                              # uses all defaults
+./script.md --topic "AI safety"          # overrides one var
+./script.md --topic "AI safety" --style formal  # overrides two
+./script.md --topic="robotics"           # equals form works too
+```
+
+Override flags matching declared var names are consumed — they don't pass through to Claude Code. Non-matching flags like `--verbose` still pass through.
+
+### Rules
+
+- **Opt-in**: Only activates when front-matter contains `vars:`. No `vars:` = no behavior change.
+- **`{{varname}}`**: Placeholders are replaced with the variable value. Doesn't collide with shell, markdown, or Claude syntax.
+- **Unset vars**: A var declared with no default (just `key:`) and no CLI override leaves `{{key}}` as-is in the prompt.
+- **Front-matter stripped**: The `---` block is removed from the prompt when `vars:` is present.
+
 ## Live Output
 
 By default, `ai` in script mode waits for the full response before printing anything. Use `--live` to stream text to the terminal as it's generated — useful for long-running scripts where you want to see progress in real-time.

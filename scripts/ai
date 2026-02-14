@@ -58,14 +58,14 @@ _parse_shebang_flags() {
     SHEBANG_PASSTHROUGH=()
 
     # Only parse shebangs referencing ai, airun, or claude-run
-    [[ "$line" != *"ai"* && "$line" != *"claude-run"* ]] && return
+    [[ "$line" != *"ai"* && "$line" != *"claude-run"* ]] && return 0
 
     # Extract flags after the command name
     local flags=""
     if [[ "$line" =~ (airun|claude-run|ai)[[:space:]]+(.*) ]]; then
         flags="${BASH_REMATCH[2]}"
     else
-        return
+        return 0
     fi
 
     local -a args
@@ -98,6 +98,132 @@ _parse_shebang_flags() {
                 # Pass through unrecognized flags (--chrome, --max-turns, etc.)
                 SHEBANG_PASSTHROUGH+=("$arg") ;;
         esac
+    done
+}
+
+# Parse YAML front-matter variables from content
+# Sets VAR_NAMES[], VAR_VALUES[], FRONT_MATTER_END
+# Returns 1 if no vars: block found
+_parse_front_matter() {
+    local content="$1"
+    VAR_NAMES=()
+    VAR_VALUES=()
+    FRONT_MATTER_END=0
+
+    # First line must be ---
+    local first_line="${content%%$'\n'*}"
+    [[ "$first_line" != "---" ]] && return 1
+
+    # Find closing --- and extract lines between
+    local in_vars=false
+    local line_num=0
+    local found_vars=false
+    while IFS= read -r _line; do
+        line_num=$((line_num + 1))
+        # Skip opening ---
+        [[ $line_num -eq 1 ]] && continue
+        # Closing ---
+        if [[ "$_line" == "---" ]]; then
+            FRONT_MATTER_END=$line_num
+            break
+        fi
+        # Detect vars: section
+        if [[ "$_line" == "vars:" ]]; then
+            in_vars=true
+            found_vars=true
+            continue
+        fi
+        # Parse indented key: value pairs under vars:
+        if [[ "$in_vars" == true ]]; then
+            # Stop if we hit a non-indented line (new section)
+            if [[ "$_line" =~ ^[^[:space:]] ]]; then
+                in_vars=false
+                continue
+            fi
+            # Match "  key: value" or "  key:" (no value)
+            if [[ "$_line" =~ ^[[:space:]]+([a-zA-Z_][a-zA-Z0-9_-]*):(.*)$ ]]; then
+                local key="${BASH_REMATCH[1]}"
+                local val="${BASH_REMATCH[2]}"
+                # Trim leading whitespace and quotes from value
+                val="${val#"${val%%[![:space:]]*}"}"
+                if [[ -z "$val" ]]; then
+                    val="__AI_VAR_UNSET__"
+                else
+                    # Strip surrounding quotes
+                    val="${val%\"}"
+                    val="${val#\"}"
+                    val="${val%\'}"
+                    val="${val#\'}"
+                fi
+                VAR_NAMES+=("$key")
+                VAR_VALUES+=("$val")
+            fi
+        fi
+    done <<< "$content"
+
+    [[ "$found_vars" == true && $FRONT_MATTER_END -gt 0 ]] && return 0 || return 1
+}
+
+# Apply CLI overrides: --key value and --key=value matching declared var names
+# Consumes matched args from CLAUDE_ARGS[], updates VAR_VALUES[]
+_apply_var_overrides() {
+    local -a new_args=()
+    local i=0
+    while [[ $i -lt ${#CLAUDE_ARGS[@]} ]]; do
+        local arg="${CLAUDE_ARGS[$i]}"
+        local matched=false
+
+        # Check --key=value form
+        if [[ "$arg" == --*=* ]]; then
+            local key="${arg%%=*}"
+            key="${key#--}"
+            local val="${arg#*=}"
+            local j=0
+            while [[ $j -lt ${#VAR_NAMES[@]} ]]; do
+                if [[ "${VAR_NAMES[$j]}" == "$key" ]]; then
+                    VAR_VALUES[$j]="$val"
+                    matched=true
+                    break
+                fi
+                j=$((j + 1))
+            done
+        # Check --key value form
+        elif [[ "$arg" == --* ]]; then
+            local key="${arg#--}"
+            local j=0
+            while [[ $j -lt ${#VAR_NAMES[@]} ]]; do
+                if [[ "${VAR_NAMES[$j]}" == "$key" ]]; then
+                    # Consume next arg as value
+                    i=$((i + 1))
+                    if [[ $i -lt ${#CLAUDE_ARGS[@]} ]]; then
+                        VAR_VALUES[$j]="${CLAUDE_ARGS[$i]}"
+                    fi
+                    matched=true
+                    break
+                fi
+                j=$((j + 1))
+            done
+        fi
+
+        if [[ "$matched" == false ]]; then
+            new_args+=("$arg")
+        fi
+        i=$((i + 1))
+    done
+    CLAUDE_ARGS=("${new_args[@]}")
+}
+
+# Substitute {{varname}} placeholders in CONTENT with var values
+_substitute_vars() {
+    local i=0
+    while [[ $i -lt ${#VAR_NAMES[@]} ]]; do
+        local name="${VAR_NAMES[$i]}"
+        local val="${VAR_VALUES[$i]}"
+        # Skip unset vars — leave placeholder as-is
+        if [[ "$val" != "__AI_VAR_UNSET__" ]]; then
+            CONTENT="${CONTENT//\{\{$name\}\}/$val}"
+        fi
+        i=$((i + 1))
     done
 }
 
@@ -358,6 +484,11 @@ Output and input:
   --quiet, -q                  Suppress --live status (clean stdout for CI/CD)
   --stdin-position <pos>       Place piped input before or after file content:
                                'prepend' (default) or 'append'
+
+Script variables:
+  ---/vars:/---                  YAML front-matter declares variables with defaults
+  {{varname}}                    Placeholder substituted with variable value
+  --varname "value"              Override a declared variable from CLI
 
 Defaults:
   --set-default                Save current provider+model as persistent default
@@ -660,6 +791,19 @@ if [[ -n "$MD_FILE" ]]; then
         CONTENT=$(cat "$MD_FILE")
     fi
 
+    # Front-matter variable processing
+    if _parse_front_matter "$CONTENT"; then
+        n=0; tmp=""
+        while IFS= read -r _line; do
+            n=$((n + 1))
+            [[ $n -le $FRONT_MATTER_END ]] && continue
+            [[ -n "$tmp" ]] && tmp="$tmp"$'\n'"$_line" || tmp="$_line"
+        done <<< "$CONTENT"
+        CONTENT="$tmp"
+        _apply_var_overrides
+        _substitute_vars
+    fi
+
     # Integrate stdin content if available
     if [[ -n "$STDIN_CONTENT" ]]; then
         if [[ "$STDIN_POSITION" == "prepend" ]]; then
@@ -697,6 +841,19 @@ if [[ -n "$STDIN_CONTENT" ]]; then
     # Strip shebang line from piped content if present (flags already parsed early)
     FIRST_LINE="${STDIN_CONTENT%%$'\n'*}"
     [[ "$FIRST_LINE" == "#!"* ]] && CONTENT="${STDIN_CONTENT#*$'\n'}" || CONTENT="$STDIN_CONTENT"
+
+    # Front-matter variable processing
+    if _parse_front_matter "$CONTENT"; then
+        n=0; tmp=""
+        while IFS= read -r _line; do
+            n=$((n + 1))
+            [[ $n -le $FRONT_MATTER_END ]] && continue
+            [[ -n "$tmp" ]] && tmp="$tmp"$'\n'"$_line" || tmp="$_line"
+        done <<< "$CONTENT"
+        CONTENT="$tmp"
+        _apply_var_overrides
+        _substitute_vars
+    fi
 
     # Show status when interactive or when --live with stderr on a terminal
     if is_interactive || [[ "$LIVE_OUTPUT" == true && -t 2 ]]; then

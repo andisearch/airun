@@ -11,6 +11,7 @@ Executable markdown scripts showing key AI Runner features. Run from any repo.
 | `run-tests.md` | `--skip` | Automation — `--skip` allows running commands and writing files |
 | `live-report.md` | `--skip --live` | Live streaming — see output in real-time as it's generated |
 | `analyze-stdin.md` | *(none)* | Stdin piping — accepts data via `cat data.json \| ./analyze-stdin.md` |
+| `summarize-topic.md` | `--haiku` + vars | Variables — front-matter defaults with `--varname` CLI overrides |
 
 ## Running
 
@@ -54,6 +55,7 @@ See [docs/SCRIPTING.md](../docs/SCRIPTING.md) for composable patterns and the di
 - **`--skip`** = full automation (can run commands, write files, use tools)
 - **`--live`** = stream text as it's generated. Streams at turn granularity — your prompt should tell Claude to narrate progress (e.g., "print your findings as you go") so there's text to stream between tool calls. When redirecting to a file (`> report.md`), narration streams to stderr while clean content goes to the file.
 - **Stdin piping** = pipe data in with `cat file | ./script.md`
+- **Variables** = declare `vars:` in YAML front-matter, override with `--varname "value"` from CLI
 - **CLI overrides shebang** = `ai --aws script.md` overrides the script's shebang provider
 - **Shebang overrides defaults** = shebang flags beat `--set-default` preferences
 

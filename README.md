@@ -32,7 +32,7 @@ Switch between your [Claude Code](https://claude.ai/code) subscription and diffe
 
 From [Andi AI Search](https://andisearch.com). [Star this repo](https://github.com/andisearch/airun) if it helps!
 
-**Latest:** Live streaming output (`--live`), Agent Teams (`--team`), Opus 4.6 models, local models with Ollama and LM Studio, persistent defaults (`--set-default`), Vercel AI Gateway with 100+ models. See [CHANGELOG.md](CHANGELOG.md).
+**Latest:** Script variables (`vars:` front-matter + `{{placeholders}}`), live streaming (`--live`), Agent Teams (`--team`), Opus 4.6, local models (Ollama, LM Studio), persistent defaults, 100+ cloud models via Vercel. See [CHANGELOG.md](CHANGELOG.md).
 
 ## Quick Start
 
@@ -212,6 +212,29 @@ ai --opus task.md                  # Override: use Opus instead
 > **Warning:** `--skip`, `--bypass`, and `--permission-mode bypassPermissions` give the AI full system access. Only run trusted scripts in trusted directories. Use `--allowedTools` for granular control. See **[docs/SCRIPTING.md](docs/SCRIPTING.md)** for details.
 
 See **[examples/](examples/)** for ready-to-run scripts and **[docs/SCRIPTING.md](docs/SCRIPTING.md)** for the full scripting & automation guide.
+
+### Script Variables
+
+Declare variables with defaults in YAML front-matter. Users override them from the CLI without editing the script:
+
+```markdown
+#!/usr/bin/env -S ai --haiku
+---
+vars:
+  topic: "machine learning"
+  style: casual
+  length: short
+---
+Write a {{length}} summary of {{topic}} in a {{style}} tone.
+```
+
+```bash
+./summarize-topic.md                          # uses defaults
+./summarize-topic.md --topic "AI safety"      # overrides one
+./summarize-topic.md --topic "robotics" --style formal  # overrides two
+```
+
+Override flags matching declared var names are consumed — `--verbose` and other unrecognized flags still pass through to Claude Code. Only activates when front-matter contains `vars:` — no behavior change for existing scripts.
 
 ### Unix Pipe Support
 

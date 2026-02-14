@@ -5,6 +5,28 @@ All notable changes to AI Runner will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.4.1] - 2026-02-14
+
+### Fixed
+- **`set -e` safety**: `_parse_shebang_flags` now returns explicit `0` on no-op paths (bare shebang, non-ai shebang). Previously, bare `return` propagated the regex failure exit code, silently killing `scripts/ai` under `set -e`.
+- **`load_defaults` under `set -e`**: Added `|| true` so missing `~/.ai-runner/defaults.sh` no longer causes silent script exit in dev mode.
+
+### Added
+- **Tests**: 4 new assertions for `set -e` safety of `_parse_shebang_flags` and `load_defaults` (188 total)
+
+## [2.4.0] - 2026-02-14
+
+### Added
+- **Script variables (YAML front-matter)**: Declare variables with defaults in markdown scripts, override from CLI
+  - `vars:` block in YAML front-matter declares variables with optional defaults
+  - `{{varname}}` placeholders in prompt text are substituted with variable values
+  - `--varname "value"` or `--varname=value` on CLI overrides defaults — matched args are consumed, non-matching flags pass through to Claude Code unchanged
+  - Unset vars (declared with no default and no CLI override) leave `{{varname}}` as-is in prompt
+  - Opt-in: only activates when front-matter contains `vars:` — zero behavior change for existing scripts
+  - Bash 3.2 compatible (parallel indexed arrays, no associative arrays)
+- **Example**: `examples/summarize-topic.md` — demonstrates variables with `topic`, `style`, `length`
+- **Tests 34-39**: Front-matter function sync, parsing, substitution, CLI override consumption, help text, example validation (27 new assertions, 179 total)
+
 ## [2.3.6] - 2026-02-14
 
 ### Added
