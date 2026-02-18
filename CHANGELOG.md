@@ -5,6 +5,11 @@ All notable changes to AI Runner will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.4.2] - 2026-02-18
+
+### Changed
+- **Sonnet 4.5 → 4.6**: Updated all default Sonnet model IDs across providers, config, examples, and docs. Sonnet 4.6 drops date-stamp suffixes from model IDs (e.g., `claude-sonnet-4-6` instead of `claude-sonnet-4-5-20250929`).
+
 ## [2.4.1] - 2026-02-14
 
 ### Fixed

@@ -107,9 +107,9 @@ provider_get_model_id() {
 
     case "$tier" in
         high) echo "${CLAUDE_MODEL_OPUS_AWS:-global.anthropic.claude-opus-4-6-v1}" ;;
-        mid)  echo "${CLAUDE_MODEL_SONNET_AWS:-global.anthropic.claude-sonnet-4-5-20250929-v1:0}" ;;
+        mid)  echo "${CLAUDE_MODEL_SONNET_AWS:-global.anthropic.claude-sonnet-4-6}" ;;
         low)  echo "${CLAUDE_MODEL_HAIKU_AWS:-us.anthropic.claude-haiku-4-5-20251001-v1:0}" ;;
-        *)    echo "${CLAUDE_MODEL_SONNET_AWS:-global.anthropic.claude-sonnet-4-5-20250929-v1:0}" ;;
+        *)    echo "${CLAUDE_MODEL_SONNET_AWS:-global.anthropic.claude-sonnet-4-6}" ;;
     esac
 }
 

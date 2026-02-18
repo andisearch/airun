@@ -116,7 +116,7 @@ PROVIDER FLAGS:
 
 MODEL FLAGS:
   --opus      Use Opus 4.5
-  --sonnet    Use Sonnet 4.5 (default)
+  --sonnet    Use Sonnet 4.6 (default)
   --haiku    Use Haiku 4.5
   --model ID  Use specific model ID
 

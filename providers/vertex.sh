@@ -128,9 +128,9 @@ provider_get_model_id() {
 
     case "$tier" in
         high) echo "${CLAUDE_MODEL_OPUS_VERTEX:-claude-opus-4-6}" ;;
-        mid)  echo "${CLAUDE_MODEL_SONNET_VERTEX:-claude-sonnet-4-5@20250929}" ;;
+        mid)  echo "${CLAUDE_MODEL_SONNET_VERTEX:-claude-sonnet-4-6}" ;;
         low)  echo "${CLAUDE_MODEL_HAIKU_VERTEX:-claude-haiku-4-5@20251001}" ;;
-        *)    echo "${CLAUDE_MODEL_SONNET_VERTEX:-claude-sonnet-4-5@20250929}" ;;
+        *)    echo "${CLAUDE_MODEL_SONNET_VERTEX:-claude-sonnet-4-6}" ;;
     esac
 }
 

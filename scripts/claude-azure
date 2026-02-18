@@ -36,7 +36,7 @@ if [ -z "$ANTHROPIC_FOUNDRY_RESOURCE" ] && [ -z "$ANTHROPIC_FOUNDRY_BASE_URL" ];
     print_error "Example secrets.sh:"
     print_error "  export ANTHROPIC_FOUNDRY_RESOURCE=\"your-resource-name\""
     print_error "  export ANTHROPIC_FOUNDRY_API_KEY=\"your-azure-api-key\"  # Optional"
-    print_error "  export CLAUDE_MODEL_SONNET_AZURE=\"claude-sonnet-4-5\"  # Your deployment name"
+    print_error "  export CLAUDE_MODEL_SONNET_AZURE=\"claude-sonnet-4-6\"  # Your deployment name"
     exit 1
 fi
 

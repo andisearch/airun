@@ -75,9 +75,9 @@ provider_get_model_id() {
     # Use Anthropic API model names for Claude Pro
     case "$tier" in
         high) echo "claude-opus-4-6" ;;
-        mid)  echo "claude-sonnet-4-5-20250929" ;;
+        mid)  echo "claude-sonnet-4-6" ;;
         low)  echo "claude-haiku-4-5" ;;
-        *)    echo "claude-sonnet-4-5-20250929" ;;
+        *)    echo "claude-sonnet-4-6" ;;
     esac
 }
 

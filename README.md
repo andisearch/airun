@@ -128,7 +128,7 @@ ai --vercel --model openai/gpt-5.2-codex      # OpenAI coding model
 
 # Model selection (Pro defaults to latest, API providers default to Sonnet)
 ai --opus task.md                 # Opus 4.6 (most capable)
-ai --sonnet task.md               # Sonnet 4.5
+ai --sonnet task.md               # Sonnet 4.6
 ai --haiku task.md                # Haiku 4.5 (fastest)
 
 # Alternative tier names
@@ -515,7 +515,7 @@ Default model IDs are defined in `config/models.sh`. Override them in `~/.ai-run
 
 ```bash
 # Override AWS model
-export CLAUDE_MODEL_SONNET_AWS="global.anthropic.claude-sonnet-4-5-20250929-v1:0"
+export CLAUDE_MODEL_SONNET_AWS="global.anthropic.claude-sonnet-4-6"
 
 # Override small/fast model for background operations
 export CLAUDE_SMALL_FAST_MODEL_AWS="us.anthropic.claude-haiku-4-5-20251001-v1:0"
