@@ -5,6 +5,11 @@ All notable changes to AI Runner will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.4.3] - 2026-03-03
+
+### Added
+- **Docs site links**: Added links to new documentation site (docs.airun.me) in README badge row, site top nav, site footer, and a docs promo callout section on the homepage
+
 ## [2.4.2] - 2026-02-18
 
 ### Changed
