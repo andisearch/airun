@@ -1538,6 +1538,105 @@ TESTSCRIPT
         fail "--topic not consumed from CLAUDE_ARGS: $output"
     fi
 
+    # --- Boolean flag tests ---
+
+    # Test: --flag_var at end of args → value becomes "true"
+    cat > "$test_dir/test-bool-end.sh" << 'TESTSCRIPT'
+#!/bin/bash
+source "$1"
+VAR_NAMES=(topic verbose)
+VAR_VALUES=("default topic" "false")
+CLAUDE_ARGS=("--topic" "override topic" "--verbose")
+_apply_var_overrides
+echo "VERBOSE=${VAR_VALUES[1]}"
+echo "TOPIC=${VAR_VALUES[0]}"
+echo "ARGS=${CLAUDE_ARGS[*]}"
+TESTSCRIPT
+
+    output=$(bash "$test_dir/test-bool-end.sh" "$test_dir/funcs.sh" 2>&1)
+
+    if echo "$output" | grep -q "VERBOSE=true"; then
+        pass "--verbose at end of args sets value to 'true'"
+    else
+        fail "--verbose boolean flag at end failed: $output"
+    fi
+
+    if echo "$output" | grep -q "TOPIC=override topic"; then
+        pass "--topic value still consumed correctly alongside boolean flag"
+    else
+        fail "--topic alongside boolean flag failed: $output"
+    fi
+
+    # Test: --flag_var followed by another flag → boolean "true", other flag preserved
+    cat > "$test_dir/test-bool-before-flag.sh" << 'TESTSCRIPT'
+#!/bin/bash
+source "$1"
+VAR_NAMES=(verbose topic)
+VAR_VALUES=("false" "default")
+CLAUDE_ARGS=("--verbose" "--max-turns" "5")
+_apply_var_overrides
+echo "VERBOSE=${VAR_VALUES[0]}"
+echo "ARGS=${CLAUDE_ARGS[*]}"
+TESTSCRIPT
+
+    output=$(bash "$test_dir/test-bool-before-flag.sh" "$test_dir/funcs.sh" 2>&1)
+
+    if echo "$output" | grep -q "VERBOSE=true"; then
+        pass "--verbose before --max-turns sets boolean 'true'"
+    else
+        fail "--verbose before another flag failed: $output"
+    fi
+
+    if echo "$output" | grep -q -- "--max-turns 5"; then
+        pass "--max-turns 5 preserved after boolean flag"
+    else
+        fail "Passthrough args not preserved after boolean flag: $output"
+    fi
+
+    # --- CC flag conflict warning tests ---
+
+    # Test: warning emitted when var name shadows a Claude Code flag
+    local cc_flags_file="$HOME/.ai-runner/.cc-flags"
+    if [[ -f "$cc_flags_file" ]] && grep -qx "verbose" "$cc_flags_file" 2>/dev/null; then
+        # Cache exists and has "verbose" — test the warning
+        cat > "$test_dir/test-cc-conflict.sh" << 'TESTSCRIPT'
+#!/bin/bash
+source "$1"
+VAR_NAMES=(verbose)
+VAR_VALUES=("false")
+CLAUDE_ARGS=("--verbose")
+_apply_var_overrides
+TESTSCRIPT
+
+        output=$(bash "$test_dir/test-cc-conflict.sh" "$test_dir/funcs.sh" 2>&1)
+
+        if echo "$output" | grep -q "Warning.*--verbose.*Claude Code flag"; then
+            pass "CC flag conflict warning emitted for --verbose"
+        else
+            fail "CC flag conflict warning missing for --verbose: $output"
+        fi
+
+        # Test: no warning for var names that aren't CC flags
+        cat > "$test_dir/test-no-conflict.sh" << 'TESTSCRIPT'
+#!/bin/bash
+source "$1"
+VAR_NAMES=(topic)
+VAR_VALUES=("default")
+CLAUDE_ARGS=("--topic" "override")
+_apply_var_overrides
+TESTSCRIPT
+
+        output=$(bash "$test_dir/test-no-conflict.sh" "$test_dir/funcs.sh" 2>&1)
+
+        if echo "$output" | grep -q "Warning"; then
+            fail "Spurious CC flag conflict warning for --topic: $output"
+        else
+            pass "No warning for --topic (not a Claude Code flag)"
+        fi
+    else
+        pass "CC flag cache not available — conflict warning tests skipped (run setup.sh to enable)"
+    fi
+
     rm -rf "$test_dir"
 }
 

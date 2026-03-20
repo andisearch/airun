@@ -428,11 +428,13 @@ _parse_front_matter() {
 }
 
 _apply_var_overrides() {
+    local _cc_flags_file="$HOME/.ai-runner/.cc-flags"
     local -a new_args=()
     local i=0
     while [[ $i -lt ${#CLAUDE_ARGS[@]} ]]; do
         local arg="${CLAUDE_ARGS[$i]}"
         local matched=false
+        local matched_key=""
         if [[ "$arg" == --*=* ]]; then
             local key="${arg%%=*}"
             key="${key#--}"
@@ -442,6 +444,7 @@ _apply_var_overrides() {
                 if [[ "${VAR_NAMES[$j]}" == "$key" ]]; then
                     VAR_VALUES[$j]="$val"
                     matched=true
+                    matched_key="$key"
                     break
                 fi
                 j=$((j + 1))
@@ -451,15 +454,23 @@ _apply_var_overrides() {
             local j=0
             while [[ $j -lt ${#VAR_NAMES[@]} ]]; do
                 if [[ "${VAR_NAMES[$j]}" == "$key" ]]; then
-                    i=$((i + 1))
-                    if [[ $i -lt ${#CLAUDE_ARGS[@]} ]]; then
+                    local next_i=$((i + 1))
+                    if [[ $next_i -lt ${#CLAUDE_ARGS[@]} ]] && [[ ! "${CLAUDE_ARGS[$next_i]}" == --* ]]; then
+                        i=$next_i
                         VAR_VALUES[$j]="${CLAUDE_ARGS[$i]}"
+                    else
+                        VAR_VALUES[$j]="true"
                     fi
                     matched=true
+                    matched_key="$key"
                     break
                 fi
                 j=$((j + 1))
             done
+        fi
+        if [[ "$matched" == true && -n "$matched_key" && -f "$_cc_flags_file" ]] \
+            && grep -qx "$matched_key" "$_cc_flags_file" 2>/dev/null; then
+            echo "Warning: --$matched_key matches both script variable and Claude Code flag. Variable takes priority; rename to avoid conflict." >&2
         fi
         if [[ "$matched" == false ]]; then
             new_args+=("$arg")
@@ -938,6 +949,16 @@ $SUDO chmod +x "$INSTALL_DIR/ai"
 
 # Create airun symlink
 $SUDO ln -sf ai "$INSTALL_DIR/airun"
+
+# Generate Claude Code flags cache for variable conflict detection
+# This list auto-refreshes on setup.sh and ai update
+if command -v claude &>/dev/null; then
+    claude --help 2>/dev/null \
+        | grep -oE '\-\-[a-zA-Z][a-zA-Z0-9-]*' \
+        | sed 's/^--//' \
+        | grep -vxE 'aws|vertex|apikey|azure|vercel|pro|ollama|ol|lmstudio|lm|team|teams|opus|sonnet|haiku|high|mid|low|model|tool|cc|skip|bypass|live|quiet|version|help|set-default|clear-default|stdin-position' \
+        | sort -u > "$CONFIG_DIR/.cc-flags" 2>/dev/null || true
+fi
 
 # --- 3. Completion ---
 

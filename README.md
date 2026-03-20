@@ -238,6 +238,14 @@ Write a {{length}} summary of {{topic}} in a {{style}} tone.
 ./summarize-topic.md --topic "robotics" --style formal  # overrides two
 ```
 
+Boolean flags — `--varname` without a value sets the variable to `"true"`:
+
+```bash
+# Given a script with vars: verbose: false
+./script.md --verbose                         # sets verbose to "true"
+./script.md --verbose --topic "AI safety"     # verbose="true", topic overridden
+```
+
 Variable overrides mix freely with AI Runner flags like `--live` and provider overrides:
 
 ```bash

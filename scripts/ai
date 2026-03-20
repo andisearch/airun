@@ -167,11 +167,13 @@ _parse_front_matter() {
 # Apply CLI overrides: --key value and --key=value matching declared var names
 # Consumes matched args from CLAUDE_ARGS[], updates VAR_VALUES[]
 _apply_var_overrides() {
+    local _cc_flags_file="$HOME/.ai-runner/.cc-flags"
     local -a new_args=()
     local i=0
     while [[ $i -lt ${#CLAUDE_ARGS[@]} ]]; do
         local arg="${CLAUDE_ARGS[$i]}"
         local matched=false
+        local matched_key=""
 
         # Check --key=value form
         if [[ "$arg" == --*=* ]]; then
@@ -183,6 +185,7 @@ _apply_var_overrides() {
                 if [[ "${VAR_NAMES[$j]}" == "$key" ]]; then
                     VAR_VALUES[$j]="$val"
                     matched=true
+                    matched_key="$key"
                     break
                 fi
                 j=$((j + 1))
@@ -203,10 +206,17 @@ _apply_var_overrides() {
                         VAR_VALUES[$j]="true"
                     fi
                     matched=true
+                    matched_key="$key"
                     break
                 fi
                 j=$((j + 1))
             done
+        fi
+
+        # Warn if variable name shadows a Claude Code flag
+        if [[ "$matched" == true && -n "$matched_key" && -f "$_cc_flags_file" ]] \
+            && grep -qx "$matched_key" "$_cc_flags_file" 2>/dev/null; then
+            echo "Warning: --$matched_key matches both script variable and Claude Code flag. Variable takes priority; rename to avoid conflict." >&2
         fi
 
         if [[ "$matched" == false ]]; then

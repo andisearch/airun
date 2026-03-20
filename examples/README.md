@@ -74,7 +74,7 @@ Variable overrides (`--topic`, `--style`, `--length`) are consumed by AI Runner.
 - **`--skip`** = full automation (can run commands, write files, use tools)
 - **`--live`** = stream text as it's generated — prompt should say "print your findings as you go" for intermediate output
 - **Stdin piping** = pipe data in with `cat file | ./script.md`
-- **Variables** = declare `vars:` in YAML front-matter, override with `--varname "value"` from CLI
+- **Variables** = declare `vars:` in YAML front-matter, override with `--varname "value"` or `--varname` (boolean) from CLI
 - **CLI overrides shebang** = `ai --aws script.md` overrides the script's shebang provider
 - **Shebang overrides defaults** = shebang flags beat `--set-default` preferences
 

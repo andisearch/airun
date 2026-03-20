@@ -5,6 +5,15 @@ All notable changes to AI Runner will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.4.5] - 2026-03-19
+
+### Added
+- **Boolean flag-style variable overrides**: `--varname` without a value now sets the variable to `"true"` — useful for feature flags like `verbose: false`. Existing `--varname value` and `--varname=value` forms unchanged.
+
+### Fixed
+- **setup.sh sync**: `_apply_var_overrides` in setup.sh heredoc now matches `scripts/ai` boolean flag logic
+- **Claude Code flag conflict detection**: Runtime warning when a script variable name shadows a Claude Code flag (e.g., `vars: verbose` vs `--verbose`). Flag list cached from `claude --help` during setup/update.
+
 ## [2.4.4] - 2026-03-07
 
 ### Added
