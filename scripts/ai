@@ -193,10 +193,14 @@ _apply_var_overrides() {
             local j=0
             while [[ $j -lt ${#VAR_NAMES[@]} ]]; do
                 if [[ "${VAR_NAMES[$j]}" == "$key" ]]; then
-                    # Consume next arg as value
-                    i=$((i + 1))
-                    if [[ $i -lt ${#CLAUDE_ARGS[@]} ]]; then
+                    # Peek at next arg: if it exists and isn't a flag, consume as value
+                    # Otherwise treat as boolean flag (set to "true")
+                    local next_i=$((i + 1))
+                    if [[ $next_i -lt ${#CLAUDE_ARGS[@]} ]] && [[ ! "${CLAUDE_ARGS[$next_i]}" == --* ]]; then
+                        i=$next_i
                         VAR_VALUES[$j]="${CLAUDE_ARGS[$i]}"
+                    else
+                        VAR_VALUES[$j]="true"
                     fi
                     matched=true
                     break
