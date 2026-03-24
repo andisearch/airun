@@ -13,6 +13,20 @@ Run gstack's /office-hours methodology as a standalone executable program agains
 
 This script demonstrates how airun extends gstack: gstack SKILL.md files define what to think about (they run inside a coding agent's REPL as slash commands). This airun script makes that methodology into an executable program — a file on disk you can run from any terminal, pipe through Unix commands, schedule with cron, and execute on any coding agent.
 
+## Protected Invariants
+
+These structural rules are load-bearing for correctness. The self-improvement loop must NEVER modify them, even indirectly. Any observation that would change these invariants must be classified as "forbidden."
+
+1. **gstack is the methodology source**: The script must always read and follow `~/.claude/skills/gstack/office-hours/SKILL.md` as the primary source of truth. It must never hard-code gstack's questions, rules, or postures inline. The value of this script is portable execution of gstack's methodology, not a reimplementation.
+
+2. **Setup before evaluation**: The sequence must be: resolve repo → install/update gstack → read SKILL.md → gather context → select mode → run methodology → produce report. Reordering would cause the evaluation to run without methodology or context.
+
+3. **Mode delegation to gstack**: Startup Mode must follow gstack Phase 2A. Builder Mode must follow gstack Phase 2B. The script must not invent its own questions or evaluation frameworks. Mode-specific behavior comes from the SKILL.md, not from this script.
+
+4. **Repo resolution contract**: The `REPO_INPUT` bash block must handle both local paths and `https://` URLs. Remote repos clone to a temp directory. All subsequent operations use the resolved REPO_PATH. Changing this would break either local or remote repo support.
+
+5. **Report structure is output contract**: The Startup Mode report (Summary → Findings → Red Flags → Strongest Signal → Assignment) and Builder Mode report (Summary → Findings → Delight Factor → Untapped Potential → Build Steps) are the script's output interface. Downstream consumers may parse these sections. Do not rename, reorder, or remove them.
+
 ## Setup
 
 ### Resolve repo target
@@ -163,3 +177,36 @@ The biggest opportunity not yet pursued. Be specific and opinionated.
 
 ### Build Steps
 Concrete things to build this week to make the project more remarkable. Prioritized by impact.
+
+---
+
+## Self-Improvement
+
+After producing the evaluation report, reflect on the script's own performance. This section runs only when the script is executed with `--focus "self-improve"` or as part of a scheduled automation that includes self-improvement.
+
+### Gather observations
+Note any issues encountered during this run:
+- Did gstack install/update work correctly?
+- Did mode auto-detection choose the right mode?
+- Did the SKILL.md methodology produce a useful evaluation?
+- Were there gaps in context gathering (files that should have been read but weren't)?
+- Did the report structure capture the evaluation's findings well?
+
+### Classify improvements
+For each observation, classify as:
+- **safe**: Improves clarity, adds a missing context-gathering step, fixes a typo. Does not change structure or methodology delegation.
+- **needs-review**: Changes to mode detection signals, report section content, or gstack integration. Log for human review.
+- **forbidden**: Violates a Protected Invariant. Log with reason: "violates protected invariant #N." Never apply.
+
+### Invariant check (required before any change)
+Before applying any change to this script, verify it does not violate the Protected Invariants section at the top. Specifically:
+- Any change that hard-codes gstack questions or rules inline → **forbidden** (invariant #1)
+- Any change that reorders setup/evaluation/report phases → **forbidden** (invariant #2)
+- Any change that adds custom evaluation logic outside gstack's methodology → **forbidden** (invariant #3)
+- Any change that breaks local path or remote URL handling → **forbidden** (invariant #4)
+- Any change that renames or removes report sections → **forbidden** (invariant #5)
+
+### Apply safe changes only
+- Maximum 3 improvements per run
+- After each edit, re-read the modified section and verify no invariant was violated
+- Log all changes (applied and forbidden) to stderr for transparency
