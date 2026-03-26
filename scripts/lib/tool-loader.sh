@@ -18,10 +18,10 @@ _get_tool_file() {
     local flag="$1"
     case "$flag" in
         cc|claude-code)  echo "claude-code.sh" ;;
-        # Future tools (placeholders for Phase 3)
+        codex)           echo "codex.sh" ;;
+        # Future tools (placeholders)
         # opencode)       echo "opencode.sh" ;;
         # aider)          echo "aider.sh" ;;
-        # codex)          echo "codex.sh" ;;
         # gemini)         echo "gemini-cli.sh" ;;
         *)               echo "" ;;
     esac
@@ -39,7 +39,7 @@ load_tool() {
     tool_file=$(_get_tool_file "$flag")
     if [ -z "$tool_file" ]; then
         print_error "Unknown tool: $flag"
-        print_error "Available tools: cc (claude-code)"
+        print_error "Available tools: cc (claude-code), codex"
         return 1
     fi
 
@@ -69,7 +69,7 @@ is_tool_loaded() {
 
 # List all available tool flags
 list_tools() {
-    echo "cc claude-code"
+    echo "cc claude-code codex"
 }
 
 # Detect default tool based on what's installed
@@ -81,16 +81,16 @@ detect_default_tool() {
         return 0
     fi
 
+    # 2. Codex CLI (OpenAI coding agent)
+    if load_tool "codex" && tool_is_installed; then
+        echo "codex"
+        return 0
+    fi
+
     # Future: additional tools
-    # 2. OpenCode (open-source alternative)
+    # 3. OpenCode (open-source alternative)
     # if command -v opencode &>/dev/null; then
     #     echo "opencode"
-    #     return 0
-    # fi
-
-    # 3. Aider (popular multi-file editor)
-    # if command -v aider &>/dev/null; then
-    #     echo "aider"
     #     return 0
     # fi
 
@@ -105,8 +105,7 @@ print_no_tool_error() {
     print_error ""
     print_error "Install one of:"
     print_error "  - Claude Code: curl -fsSL https://claude.ai/install.sh | bash"
-    # print_error "  - OpenCode:    go install github.com/sst/opencode@latest"
-    # print_error "  - Aider:       pip install aider-chat"
+    print_error "  - Codex CLI:   npm install -g @openai/codex"
 }
 
 # Check if a tool supports a provider

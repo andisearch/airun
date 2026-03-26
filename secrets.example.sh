@@ -192,6 +192,30 @@
 # export ROUTER_MODEL_LOW="anthropic/claude-haiku-4.5"
 
 # ============================================================================
+# Codex CLI (OpenAI) Configuration
+# ============================================================================
+# Required for: ai --codex
+# See: https://developers.openai.com/codex/cli
+
+# OpenAI API Key (used by Codex CLI for default cloud access)
+# export OPENAI_API_KEY="sk-..."
+# export CODEX_API_KEY="..."       # Alternative to OPENAI_API_KEY
+
+# Codex Model Tier Overrides
+# export CODEX_MODEL_HIGH="gpt-5.4"
+# export CODEX_MODEL_MID="gpt-5.3-codex"
+# export CODEX_MODEL_LOW="gpt-5.4-mini"
+
+# For custom providers (Azure OpenAI, OpenRouter, Mistral, etc.),
+# configure ~/.codex/config.toml directly:
+#   [model_providers.azure]
+#   name = "Azure OpenAI"
+#   base_url = "https://YOUR_RESOURCE.openai.azure.com/openai/v1"
+#   env_key = "AZURE_OPENAI_API_KEY"
+#
+# Then use: ai --codex --azure  or  ai --codex --profile azure
+
+# ============================================================================
 # AI Runner Defaults
 # ============================================================================
 

@@ -1,22 +1,27 @@
 # Andi AIRun
 
-Run AI prompts like programs. Executable markdown with shebang, Unix pipes, and output redirection. Extends Claude Code with cross-cloud provider switching and any-model support — free local or 100+ cloud models.
+Run AI prompts like programs. Executable markdown with shebang, Unix pipes, and output redirection. Supports multiple runtimes (Claude Code, Codex CLI) with cross-cloud provider switching and any-model support — free local or 100+ cloud models.
 
 ```bash
-# Run Claude Code interactively: any model or provider
+# Claude Code: any model or provider
 ai                                        # Regular Claude subscription (Pro, Max)
 ai --aws --opus --team --resume           # Resume chats on AWS w/ Opus 4.6 + Agent Teams
 ai --ollama --bypass --model qwen3-coder  # Ollama local model with bypassPermissions set
-ai --vercel --model openai/gpt-5.2-codex  # Vercel AI Gateway with 100+ models
 
-# Run prompts like programs
+# Codex CLI: OpenAI's coding agent
+ai --codex                                # Codex with OpenAI API (gpt-5.3-codex)
+ai --codex --high                         # Codex with gpt-5.4 (flagship)
+ai --codex --ollama                       # Codex with local Ollama models
+
+# Run prompts like programs (works with any runtime)
 ai --azure --haiku script.md
+ai --codex script.md
 
 # Script automation
 cat data.json | ./analyze.md > results.txt
 ```
 
-Switch between your [Claude Code](https://claude.ai/code) subscription and different clouds + models: AWS Bedrock, Google Vertex, Azure, Vercel + Anthropic API. Supports free local models ([Ollama](https://ollama.com/), [LM Studio](https://lmstudio.ai/)) and 100+ alternate cloud models via [Vercel AI Gateway](https://vercel.com/ai-gateway) or Ollama Cloud. Swap and resume conversations mid-task to avoid rate limits and keep working.
+Choose your runtime — [Claude Code](https://claude.ai/code) or [Codex CLI](https://developers.openai.com/codex/cli) — and switch between clouds + models: AWS Bedrock, Google Vertex, Azure, Vercel, Anthropic API, OpenAI API. Supports free local models ([Ollama](https://ollama.com/), [LM Studio](https://lmstudio.ai/)) and 100+ alternate cloud models via [Vercel AI Gateway](https://vercel.com/ai-gateway) or Ollama Cloud. Swap and resume conversations mid-task to avoid rate limits and keep working.
 
 [![GitHub Stars](https://img.shields.io/github/stars/andisearch/airun?style=for-the-badge&logo=github)](https://github.com/andisearch/airun/stargazers)
 [![Buy Me a Coffee](https://img.shields.io/badge/Buy_Me_A_Coffee-Support-yellow?logo=buy-me-a-coffee&style=for-the-badge)](https://buymeacoffee.com/andisearch)
@@ -24,16 +29,18 @@ Switch between your [Claude Code](https://claude.ai/code) subscription and diffe
 [![Docs](https://img.shields.io/badge/Docs-docs.airun.me-green?style=for-the-badge&logo=readthedocs)](https://docs.airun.me)
 
 **What it does:**
+- **Multiple runtimes**: Claude Code and Codex CLI with a single `ai` command (`--cc`, `--codex`)
 - Executable markdown with `#!/usr/bin/env ai` shebang for script automation
 - Unix pipe support: pipe data into scripts, redirect output, chain in pipelines
-- Cross-cloud provider switching: use Claude on AWS, Vertex, Azure, Anthropic API + switch mid-conversation to bypass rate limits. Also supports local models and Vercel AI Gateway
-- Model tiers: `--opus`/`--high`, `--sonnet`/`--mid`, `--haiku`/`--low`
+- Cross-cloud provider switching: use Claude on AWS, Vertex, Azure, Anthropic API, or Codex on OpenAI, Azure OpenAI, OpenRouter + switch mid-conversation to bypass rate limits
+- Model tiers: `--opus`/`--high`, `--sonnet`/`--mid`, `--haiku`/`--low` — maps to each runtime's models
+- Cross-interpreter effort control: `--effort low|medium|high|max`
 - Session continuity: `--resume` picks up your previous chats with any model/provider
-- Non-destructive: plain `claude` always works untouched as before
+- Non-destructive: plain `claude` and `codex` always work untouched as before
 
 From [Andi AI Search](https://andisearch.com). [Star this repo](https://github.com/andisearch/airun) if it helps!
 
-**Latest:** Script variables (`vars:` front-matter + `{{placeholders}}`), live streaming (`--live`), Agent Teams (`--team`), Opus 4.6, local models (Ollama, LM Studio), persistent defaults, 100+ cloud models via Vercel. See [CHANGELOG.md](CHANGELOG.md).
+**Latest:** **Codex CLI support** (`--codex`), cross-interpreter effort levels (`--effort`), tool profiles (`--profile`). Script variables, live streaming, Agent Teams, Opus 4.6, local models (Ollama, LM Studio), persistent defaults, 100+ cloud models via Vercel. See [CHANGELOG.md](CHANGELOG.md).
 
 ## Quick Start
 
@@ -42,11 +49,12 @@ From [Andi AI Search](https://andisearch.com). [Star this repo](https://github.c
 - Linux (Ubuntu 20.04+, Debian 10+)
 - Windows 10+ via WSL
 
-**Prerequisites**: [Claude Code](https://claude.ai/code) (Anthropic's AI coding CLI) installed
+**Prerequisites**: At least one runtime installed — [Claude Code](https://claude.ai/code) or [Codex CLI](https://developers.openai.com/codex/cli)
 
 ```bash
-# Install Claude Code (if not already installed)
-curl -fsSL https://claude.ai/install.sh | bash
+# Install a runtime (one or both)
+curl -fsSL https://claude.ai/install.sh | bash   # Claude Code (Anthropic)
+npm install -g @openai/codex                      # Codex CLI (OpenAI)
 
 # Install Andi AIRun
 git clone https://github.com/andisearch/airun.git
@@ -106,38 +114,42 @@ Running `ai` with no flags is equivalent to running `claude` with your regular s
 ### Usage Examples
 
 ```bash
-# Run a markdown script (uses your Claude subscription, same as 'claude')
+# Run a markdown script (auto-detects runtime + provider)
 ai task.md
 
-# Switch provider with flags
+# Choose your runtime
+ai --cc                           # Claude Code (default if installed)
+ai --codex                        # Codex CLI (OpenAI)
+
+# Claude Code providers
 ai --aws                          # AWS Bedrock
 ai --vertex                       # Google Vertex AI
-ai --ollama                       # Ollama (local, free)
-ai --lmstudio                     # LM Studio (local, free)
 ai --apikey                       # Anthropic API
-ai --azure                        # Microsoft Azure
+ai --azure                        # Microsoft Azure Foundry
 ai --vercel                       # Vercel AI Gateway
 ai --pro                          # Claude Pro/Max subscription
 
-# Local model selection
-ai --ollama --model qwen3-coder   # Ollama with specific model
-ai --ollama --model glm-5:cloud       # Ollama cloud model (no GPU needed)
-ai --lmstudio --model openai/gpt-oss-20b  # LM Studio with specific model
+# Codex CLI providers
+ai --codex                        # OpenAI API (default)
+ai --codex --azure                # Azure OpenAI (via config.toml)
+ai --codex --profile openrouter   # OpenRouter (via config.toml profile)
 
-# Use any model via Vercel (OpenAI, xAI, Google, more)
-ai --vercel --model openai/gpt-5.2-codex      # OpenAI coding model
+# Local models (work with both runtimes)
+ai --ollama                       # Ollama with Claude Code
+ai --codex --ollama               # Ollama with Codex CLI
+ai --lmstudio                     # LM Studio (MLX, Apple Silicon)
 
-# Model selection (Pro defaults to latest, API providers default to Sonnet)
-ai --opus task.md                 # Opus 4.6 (most capable)
-ai --sonnet task.md               # Sonnet 4.6
-ai --haiku task.md                # Haiku 4.5 (fastest)
+# Model tiers (map to each runtime's best models)
+ai --opus task.md                 # Claude: Opus 4.6 / Codex: gpt-5.4
+ai --sonnet task.md               # Claude: Sonnet 4.6 / Codex: gpt-5.3-codex
+ai --haiku task.md                # Claude: Haiku 4.5 / Codex: gpt-5.4-mini
+ai --codex --high task.md         # Codex with gpt-5.4
 
-# Alternative tier names
-ai --high task.md                 # Same as --opus
-ai --mid task.md                  # Same as --sonnet
-ai --low task.md                  # Same as --haiku
+# Effort level (cross-interpreter reasoning control)
+ai --effort high task.md          # Claude Code: deeper reasoning
+ai --codex --effort max task.md   # Codex: maximum reasoning (xhigh)
 
-# Stream output in real-time (prompt should say "print as you go" or similar)
+# Stream output in real-time
 ai --live --skip task.md
 
 # Suppress --live status for CI/CD (clean stdout only)
@@ -146,23 +158,23 @@ ai --quiet ./live-script.md > output.md
 # Live output + file redirect (narration to console, clean content to file)
 ./live-report.md > report.md
 
-# Browser automation with live progress (--chrome is a Claude Code flag, passed through)
-ai --chrome --live --skip test-flow.md
-
 # Override script variables (--topic, --style match declared vars: names)
 ./summarize-topic.md --live --topic "the fall of rome" --style "peter griffin"
 
 # Resume last conversation
 ai --aws --resume
 
-# Set a default provider+model for when you run 'ai' with no flags
-ai --vercel --opus --set-default
-ai --clear-default              # Remove saved default
+# Save runtime + provider + model as default
+ai --codex --high --set-default   # Always use Codex + gpt-5.4
+ai --aws --opus --set-default     # Always use Claude Code + AWS + Opus
+ai --clear-default                # Remove saved default
 
-# Enable agent teams (experimental, interactive only)
-ai --team                        # Auto display mode
-ai --aws --opus --team           # Teams with AWS Bedrock + Opus
-ai --team --teammate-mode tmux   # Teams with tmux split panes
+# Smart auto permissions (AI classifier for Claude Code, sandbox for Codex)
+ai --auto task.md
+
+# Enable agent teams (Claude Code, experimental, interactive only)
+ai --team                         # Auto display mode
+ai --aws --opus --team            # Teams with AWS Bedrock + Opus
 ```
 
 ## Features
@@ -182,6 +194,11 @@ Use AWS Bedrock to analyze this code.
 ```
 
 ```markdown
+#!/usr/bin/env -S ai --codex --high
+Use Codex CLI with the flagship model to review this code.
+```
+
+```markdown
 #!/usr/bin/env -S ai --opus --live
 Review this PR for security issues. Stream output in real-time.
 ```
@@ -192,6 +209,12 @@ Review this PR for security issues. Stream output in real-time.
 Run ./test/automation/run_tests.sh and report results.
 ```
 (`--skip` is a shortcut for `--dangerously-skip-permissions`. See also `--bypass` for `--permission-mode bypassPermissions`.)
+
+```markdown
+#!/usr/bin/env -S ai --auto
+Run tests and fix any issues found.
+```
+(`--auto` uses an AI classifier (Claude Code) or sandbox (Codex) to auto-approve safe actions.)
 
 ```markdown
 #!/usr/bin/env -S ai --allowedTools 'Bash(npm test)' 'Read'
@@ -211,7 +234,9 @@ ai --opus task.md                  # Override: use Opus instead
 
 > **Flag precedence:** CLI flags > shebang flags > saved defaults. Running `ai --vercel task.md` overrides the script's shebang provider. Shebang flags override `--set-default` preferences.
 
-> **Passthrough flags:** AI Runner handles its own flags (provider, model, `--live`, `--quiet`, `--skip`, `--bypass`, `--team`, etc.) and forwards any unrecognized flags (e.g. `--chrome`, `--allowedTools`, `--output-format`, `--verbose`) to the underlying Claude Code process unchanged.
+> **Passthrough flags:** AI Runner handles its own flags (provider, model, `--live`, `--quiet`, `--skip`, `--bypass`, `--auto`, `--team`, etc.) and forwards any unrecognized flags (e.g. `--chrome`, `--allowedTools`, `--output-format`, `--verbose`) to the underlying Claude Code process unchanged.
+
+> **Portability:** Scripts are portable across runtimes. If a script includes interpreter-specific flags (e.g., `--chrome` for Claude Code), running it on another runtime produces a warning but continues execution.
 
 > **Warning:** `--skip`, `--bypass`, and `--permission-mode bypassPermissions` give the AI full system access. Only run trusted scripts in trusted directories. Use `--allowedTools` for granular control. See **[docs/SCRIPTING.md](docs/SCRIPTING.md)** for details.
 
@@ -323,30 +348,47 @@ ai --team --teammate-mode tmux   # Split panes via tmux
 - Works with all providers — coordination is through Claude Code's internal task list, not provider-specific
 - Token usage scales with team size (5 teammates ≈ 5× tokens)
 
-## Providers
+## Runtimes and Providers
 
-| Flag | Provider | Type | Notes |
-|------|----------|------|-------|
-| `--ollama` / `--ol` | Ollama | Local | Free, no API costs, cloud option |
-| `--lmstudio` / `--lm` | LM Studio | Local | MLX models (fast on Apple Silicon) |
-| `--aws` | AWS Bedrock | Cloud | Requires AWS credentials |
-| `--vertex` | Google Vertex AI | Cloud | Requires GCP project |
-| `--apikey` | Anthropic API | Cloud | Direct API access |
-| `--azure` | Microsoft Azure | Cloud | Azure Foundry |
-| `--vercel` | Vercel AI Gateway | Cloud | Any model: OpenAI, xAI, Google, Meta, more |
-| `--pro` | Claude Pro | Subscription | Default if logged in |
+### Runtimes
+
+| Flag | Runtime | Default Model | Install |
+|------|---------|---------------|---------|
+| `--cc` | Claude Code | claude-sonnet-4-6 | `curl -fsSL https://claude.ai/install.sh \| bash` |
+| `--codex` | Codex CLI | gpt-5.3-codex | `npm install -g @openai/codex` |
+
+Claude Code is the default runtime when both are installed. If only Codex is installed, it becomes the default automatically.
+
+### Providers
+
+| Flag | Provider | Claude Code | Codex CLI | Type |
+|------|----------|-------------|-----------|------|
+| `--ollama` / `--ol` | Ollama | Yes | Yes | Local |
+| `--lmstudio` / `--lm` | LM Studio | Yes | Yes | Local |
+| `--aws` | AWS Bedrock | Yes | — | Cloud |
+| `--vertex` | Google Vertex AI | Yes | — | Cloud |
+| `--apikey` | Anthropic / OpenAI API | Yes | Yes | Cloud |
+| `--azure` | Azure Foundry / Azure OpenAI | Yes | Yes | Cloud |
+| `--vercel` | Vercel AI Gateway | Yes | — | Cloud |
+| `--pro` | Claude Pro | Yes | — | Subscription |
+| `--profile <name>` | Config profile | — | Yes | Any |
+
+Codex custom providers (OpenRouter, Mistral, DeepSeek, etc.) are configured in `~/.codex/config.toml` and selected with `--profile <name>`. See the [Codex CLI docs](https://developers.openai.com/codex/cli) for config.toml setup.
 
 ### Quick Start Examples
 
 ```bash
-# Local providers (free, no API costs)
-ai --ollama                    # Ollama (GGUF models)
-ai --lm                        # LM Studio (MLX/GGUF, fast on Apple Silicon)
+# Local providers (free, no API costs — work with both runtimes)
+ai --ollama                    # Claude Code + Ollama
+ai --codex --ollama            # Codex CLI + Ollama
 
-# Cloud providers
-ai --aws --opus task.md        # AWS Bedrock + Opus
+# Claude Code cloud providers
+ai --aws --opus task.md        # AWS Bedrock + Opus 4.6
 ai --vertex task.md            # Google Vertex AI
-ai --apikey task.md            # Anthropic API direct
+
+# Codex CLI cloud providers
+ai --codex task.md             # OpenAI API + gpt-5.3-codex
+ai --codex --azure task.md     # Azure OpenAI (config.toml)
 ```
 
 ### Provider Setup
@@ -523,13 +565,16 @@ Configuration in `~/.claude-switcher/` is automatically migrated to `~/.ai-runne
 Default model IDs are defined in `config/models.sh`. Override them in `~/.ai-runner/secrets.sh`:
 
 ```bash
-# Override AWS model
+# Override Claude Code AWS model
 export CLAUDE_MODEL_SONNET_AWS="global.anthropic.claude-sonnet-4-6"
 
-# Override small/fast model for background operations
-export CLAUDE_SMALL_FAST_MODEL_AWS="us.anthropic.claude-haiku-4-5-20251001-v1:0"
+# Override Codex model tiers
+export CODEX_MODEL_HIGH="gpt-5.4"
+export CODEX_MODEL_MID="gpt-5.3-codex"
+export CODEX_MODEL_LOW="gpt-5.4-mini"
 
-# Save preferred provider+model as default
+# Save preferred runtime + provider + model as default
+ai --codex --high --set-default
 ai --aws --opus --set-default
 ai --clear-default              # Remove saved default
 ```

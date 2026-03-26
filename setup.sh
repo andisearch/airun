@@ -342,12 +342,15 @@ unset ANTHROPIC_BASE_URL ANTHROPIC_AUTH_TOKEN
 unset CLAUDE_CODE_USE_BEDROCK CLAUDE_CODE_USE_VERTEX CLAUDE_CODE_USE_FOUNDRY
 unset AI_LIVE_OUTPUT AI_QUIET AI_SESSION_ID CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS
 unset CLAUDECODE
+unset _CODEX_MODEL _CODEX_FLAGS
 
 # Parse shebang flags into SHEBANG_* variables
 _parse_shebang_flags() {
     local line="$1"
     SHEBANG_PROVIDER=""
     SHEBANG_MODEL_TIER=""
+    SHEBANG_TOOL=""
+    SHEBANG_EFFORT=""
     SHEBANG_LIVE=""
     SHEBANG_QUIET=""
     SHEBANG_PERMISSION_SHORTCUT=""
@@ -361,7 +364,12 @@ _parse_shebang_flags() {
     fi
     local -a args
     read -ra args <<< "$flags"
+    local _next_is=""
     for arg in "${args[@]}"; do
+        if [[ -n "$_next_is" ]]; then
+            [[ "$_next_is" == "effort" ]] && SHEBANG_EFFORT="$arg"
+            _next_is=""; continue
+        fi
         case "$arg" in
             --aws|--vertex|--apikey|--azure|--vercel|--pro) SHEBANG_PROVIDER="${arg#--}" ;;
             --ollama|--ol) SHEBANG_PROVIDER="ollama" ;;
@@ -373,7 +381,10 @@ _parse_shebang_flags() {
             --quiet|-q) SHEBANG_QUIET=true ;;
             --skip) SHEBANG_PERMISSION_SHORTCUT="skip" ;;
             --bypass) SHEBANG_PERMISSION_SHORTCUT="bypass" ;;
+            --auto) SHEBANG_PERMISSION_SHORTCUT="auto" ;;
             --cc) ;; # consumed by CLI parser, ignore in shebang re-parse
+            --codex) SHEBANG_TOOL="codex" ;;
+            --effort) _next_is="effort" ;;
             *) SHEBANG_PASSTHROUGH+=("$arg") ;;
         esac
     done
@@ -517,6 +528,8 @@ PERMISSION_SHORTCUT=""
 EXPLICIT_PERMISSION_MODE=false
 LIVE_OUTPUT=false
 QUIET_MODE=false
+EFFORT_LEVEL=""
+TOOL_PROFILE=""
 
 while [[ $# -gt 0 ]]; do
     case $1 in
@@ -531,6 +544,7 @@ while [[ $# -gt 0 ]]; do
         --tool) TOOL_FLAG="$2"; shift 2 ;;
         --tool=*) TOOL_FLAG="${1#*=}"; shift ;;
         --cc) TOOL_FLAG="cc"; shift ;;
+        --codex) TOOL_FLAG="codex"; shift ;;
         --aws) PROVIDER_FLAG="aws"; shift ;;
         --vertex) PROVIDER_FLAG="vertex"; shift ;;
         --apikey) PROVIDER_FLAG="apikey"; shift ;;
@@ -544,8 +558,13 @@ while [[ $# -gt 0 ]]; do
         --teammate-mode=*) TEAMMATE_MODE="${1#*=}"; CLAUDE_ARGS+=("$1"); shift ;;
         --skip) PERMISSION_SHORTCUT="skip"; shift ;;
         --bypass) PERMISSION_SHORTCUT="bypass"; shift ;;
+        --auto) PERMISSION_SHORTCUT="auto"; shift ;;
         --live) LIVE_OUTPUT=true; shift ;;
         --quiet|-q) QUIET_MODE=true; shift ;;
+        --effort) EFFORT_LEVEL="$2"; shift 2 ;;
+        --effort=*) EFFORT_LEVEL="${1#*=}"; shift ;;
+        --profile) TOOL_PROFILE="$2"; shift 2 ;;
+        --profile=*) TOOL_PROFILE="${1#*=}"; shift ;;
         --permission-mode) EXPLICIT_PERMISSION_MODE=true; CLAUDE_ARGS+=("$1" "$2"); shift 2 ;;
         --permission-mode=*) EXPLICIT_PERMISSION_MODE=true; CLAUDE_ARGS+=("$1"); shift ;;
         --dangerously-skip-permissions) EXPLICIT_PERMISSION_MODE=true; CLAUDE_ARGS+=("$1"); shift ;;
@@ -585,8 +604,10 @@ fi
 if [[ "$_SHEBANG_LINE" == "#!"* ]]; then
     _parse_shebang_flags "$_SHEBANG_LINE"
     # Apply shebang flags where CLI didn't set them
+    [[ -z "$TOOL_FLAG" && -n "$SHEBANG_TOOL" ]] && TOOL_FLAG="$SHEBANG_TOOL"
     [[ -z "$PROVIDER_FLAG" && -n "$SHEBANG_PROVIDER" ]] && PROVIDER_FLAG="$SHEBANG_PROVIDER"
     [[ -z "$MODEL_TIER" && -z "$CUSTOM_MODEL" && -n "$SHEBANG_MODEL_TIER" ]] && MODEL_TIER="$SHEBANG_MODEL_TIER"
+    [[ -z "$EFFORT_LEVEL" && -n "$SHEBANG_EFFORT" ]] && EFFORT_LEVEL="$SHEBANG_EFFORT"
     [[ "$LIVE_OUTPUT" != true && "$SHEBANG_LIVE" == true ]] && LIVE_OUTPUT=true
     [[ "$QUIET_MODE" != true && "$SHEBANG_QUIET" == true ]] && QUIET_MODE=true
     [[ -z "$PERMISSION_SHORTCUT" && -n "$SHEBANG_PERMISSION_SHORTCUT" ]] && PERMISSION_SHORTCUT="$SHEBANG_PERMISSION_SHORTCUT"
@@ -601,6 +622,7 @@ if [[ -n "$PERMISSION_SHORTCUT" ]]; then
         case "$PERMISSION_SHORTCUT" in
             skip)   CLAUDE_ARGS+=("--dangerously-skip-permissions") ;;
             bypass) CLAUDE_ARGS+=("--permission-mode" "bypassPermissions") ;;
+            auto)   CLAUDE_ARGS+=("--permission-mode" "auto") ;;
         esac
     fi
     PERMISSION_SHORTCUT=""
@@ -647,10 +669,16 @@ Model flags (pick one):
 Tool flags:
   --tool <name>                Select AI tool (default: auto-detect)
   --cc                         Shorthand for --tool cc (Claude Code)
+  --codex                      Shorthand for --tool codex (Codex CLI)
+  --profile <name>             Select a tool profile (Codex: config.toml profile)
+
+Effort:
+  --effort <level>             Reasoning effort: low, medium, high, max
 
 Permission shortcuts:
-  --skip                       Shorthand for --dangerously-skip-permissions
+  --auto                       Smart auto-approve (AI classifier or sandbox)
   --bypass                     Shorthand for --permission-mode bypassPermissions
+  --skip                       Shorthand for --dangerously-skip-permissions
 
 Agent teams (experimental):
   --team                       Enable agent teams (interactive mode only)
@@ -669,7 +697,7 @@ Script variables:
   --varname "value"              Override a declared variable from CLI
 
 Defaults:
-  --set-default                Save current provider+model as persistent default
+  --set-default                Save current tool+provider+model as persistent default
   --clear-default              Remove saved defaults
 
 Other:
@@ -750,6 +778,8 @@ if [[ "$CLEAR_DEFAULT" == true ]]; then
 fi
 
 # Apply saved defaults if no CLI flags
+# Tool default
+[[ -z "$TOOL_FLAG" && -n "$AI_DEFAULT_TOOL" ]] && TOOL_FLAG="$AI_DEFAULT_TOOL"
 # Custom model is provider-specific, so only apply when provider also comes from defaults
 CLI_PROVIDER_FLAG="$PROVIDER_FLAG"
 CLI_MODEL_TIER="$MODEL_TIER"
@@ -763,6 +793,7 @@ if [[ -z "$TEAMMATE_MODE" && -n "$AI_DEFAULT_TEAMMATE_MODE" ]]; then
     TEAMMATE_MODE="$AI_DEFAULT_TEAMMATE_MODE"
     CLAUDE_ARGS+=("--teammate-mode" "$TEAMMATE_MODE")
 fi
+[[ -z "$EFFORT_LEVEL" && -n "$AI_DEFAULT_EFFORT" ]] && EFFORT_LEVEL="$AI_DEFAULT_EFFORT"
 
 # Track whether we're running entirely from saved defaults (no CLI overrides)
 USING_DEFAULTS=false
@@ -781,63 +812,125 @@ fi
 load_tool "$TOOL_FLAG" || exit 1
 tool_is_installed || { tool_get_install_instructions; exit 1; }
 
-[[ -z "$PROVIDER_FLAG" ]] && { PROVIDER_FLAG=$(detect_default_provider); [[ -z "$PROVIDER_FLAG" ]] && { print_no_provider_error; exit 1; }; }
-load_provider "$PROVIDER_FLAG" || exit 1
-
-# Validate and setup provider (with fallback for local providers)
-_PROVIDER_FAILED=false
-if ! provider_validate_config; then
-    if [[ "$PROVIDER_FLAG" == "lmstudio" || "$PROVIDER_FLAG" == "ollama" ]]; then
-        provider_get_validation_error >&2; _PROVIDER_FAILED=true
-    else
-        provider_get_validation_error >&2; exit 1
-    fi
+# Check if tool manages its own backend (e.g., Codex CLI)
+_TOOL_SELF_MANAGED=false
+if declare -f tool_needs_provider &>/dev/null && ! tool_needs_provider; then
+    _TOOL_SELF_MANAGED=true
 fi
-if [[ "$_PROVIDER_FAILED" == false ]]; then
-    if [[ -z "$MODEL_TIER" && -z "$CUSTOM_MODEL" && "$PROVIDER_FLAG" != "pro" ]]; then
-        MODEL_TIER="mid"
-    fi
-    if ! provider_setup_env "$MODEL_TIER" "$CUSTOM_MODEL"; then
-        if [[ "$PROVIDER_FLAG" == "lmstudio" || "$PROVIDER_FLAG" == "ollama" ]]; then
-            _PROVIDER_FAILED=true
-        else
+
+if [[ "$_TOOL_SELF_MANAGED" == true ]]; then
+    # Self-managed tool: validate provider if specified, then let tool handle env
+    if [[ -n "$PROVIDER_FLAG" ]]; then
+        if ! echo "$(tool_supported_providers)" | grep -qw "$PROVIDER_FLAG"; then
+            print_error "$(tool_name) does not support the --$PROVIDER_FLAG provider"
+            print_error "Supported providers for $(tool_name): $(tool_supported_providers)"
+            print_error "For other backends, use --profile <name> (configure in ~/.codex/config.toml)"
             exit 1
         fi
+        _validated_providers=""
+        declare -f tool_validated_providers &>/dev/null && _validated_providers=$(tool_validated_providers)
+        if [[ -n "$_validated_providers" ]] && echo "$_validated_providers" | grep -qw "$PROVIDER_FLAG"; then
+            if load_provider "$PROVIDER_FLAG"; then
+                if ! provider_validate_config; then
+                    provider_get_validation_error >&2
+                    exit 1
+                fi
+            fi
+        fi
     fi
-fi
-if [[ "$_PROVIDER_FAILED" == true ]]; then
-    echo "" >&2
-    MODEL_TIER=""; CUSTOM_MODEL=""
-    _FAILED_PROVIDER="$PROVIDER_FLAG"
-    _saved_dp="$DEFAULT_PROVIDER"; DEFAULT_PROVIDER=""
-    PROVIDER_FLAG=$(detect_default_provider)
-    DEFAULT_PROVIDER="$_saved_dp"
-    if [[ -z "$PROVIDER_FLAG" || "$PROVIDER_FLAG" == "$_FAILED_PROVIDER" ]]; then
-        print_error "No fallback provider available. Run ai-status to check your setup."; exit 1
+    if [[ -z "$MODEL_TIER" && -z "$CUSTOM_MODEL" ]]; then
+        MODEL_TIER="mid"
     fi
+    if ! tool_setup_env; then
+        exit 1
+    fi
+else
+    # Provider-managed tool (Claude Code): existing provider flow
+    [[ -z "$PROVIDER_FLAG" ]] && { PROVIDER_FLAG=$(detect_default_provider); [[ -z "$PROVIDER_FLAG" ]] && { print_no_provider_error; exit 1; }; }
     load_provider "$PROVIDER_FLAG" || exit 1
-    provider_validate_config || { provider_get_validation_error >&2; exit 1; }
-    [[ -z "$MODEL_TIER" && -z "$CUSTOM_MODEL" && "$PROVIDER_FLAG" != "pro" ]] && MODEL_TIER="mid"
-    provider_setup_env "$MODEL_TIER" "$CUSTOM_MODEL" || exit 1
-    print_warning "Falling back to $(provider_name)"
+
+    # Validate and setup provider (with fallback for local providers)
+    _PROVIDER_FAILED=false
+    if ! provider_validate_config; then
+        if [[ "$PROVIDER_FLAG" == "lmstudio" || "$PROVIDER_FLAG" == "ollama" ]]; then
+            provider_get_validation_error >&2; _PROVIDER_FAILED=true
+        else
+            provider_get_validation_error >&2; exit 1
+        fi
+    fi
+    if [[ "$_PROVIDER_FAILED" == false ]]; then
+        if ! tool_supports_provider "$PROVIDER_FLAG"; then
+            print_warning "$(tool_name) may not fully support $(provider_name)"
+        fi
+        if [[ -z "$MODEL_TIER" && -z "$CUSTOM_MODEL" && "$PROVIDER_FLAG" != "pro" ]]; then
+            MODEL_TIER="mid"
+        fi
+        if ! provider_setup_env "$MODEL_TIER" "$CUSTOM_MODEL"; then
+            if [[ "$PROVIDER_FLAG" == "lmstudio" || "$PROVIDER_FLAG" == "ollama" ]]; then
+                _PROVIDER_FAILED=true
+            else
+                exit 1
+            fi
+        fi
+    fi
+    if [[ "$_PROVIDER_FAILED" == true ]]; then
+        echo "" >&2
+        MODEL_TIER=""; CUSTOM_MODEL=""
+        _FAILED_PROVIDER="$PROVIDER_FLAG"
+        _saved_dp="$DEFAULT_PROVIDER"; DEFAULT_PROVIDER=""
+        PROVIDER_FLAG=$(detect_default_provider)
+        DEFAULT_PROVIDER="$_saved_dp"
+        if [[ -z "$PROVIDER_FLAG" || "$PROVIDER_FLAG" == "$_FAILED_PROVIDER" ]]; then
+            print_error "No fallback provider available. Run ai-status to check your setup."; exit 1
+        fi
+        load_provider "$PROVIDER_FLAG" || exit 1
+        provider_validate_config || { provider_get_validation_error >&2; exit 1; }
+        [[ -z "$MODEL_TIER" && -z "$CUSTOM_MODEL" && "$PROVIDER_FLAG" != "pro" ]] && MODEL_TIER="mid"
+        provider_setup_env "$MODEL_TIER" "$CUSTOM_MODEL" || exit 1
+        print_warning "Falling back to $(provider_name)"
+    fi
 fi
 
 # Save as default if requested
 if [[ "$SET_DEFAULT" == true ]]; then
-    save_defaults "$PROVIDER_FLAG" "$MODEL_TIER" "$CUSTOM_MODEL" "$TEAM_MODE" "$TEAMMATE_MODE"
+    save_defaults "$PROVIDER_FLAG" "$MODEL_TIER" "$CUSTOM_MODEL" "$TEAM_MODE" "$TEAMMATE_MODE" "$TOOL_FLAG" "$EFFORT_LEVEL"
 fi
 
-tool_setup_env
+# Setup tool environment (for provider-managed tools; self-managed already called above)
+if [[ "$_TOOL_SELF_MANAGED" != true ]]; then
+    tool_setup_env
+fi
+
 [[ -n "$TEAM_MODE" ]] && export CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1
 
-AI_SESSION_ID="$(tool_flag)-$(provider_flag)-$$-$(date +%s)"
+_session_provider="$(declare -f provider_flag &>/dev/null && provider_flag || echo 'self')"
+AI_SESSION_ID="$(tool_flag)-${_session_provider}-$$-$(date +%s)"
 export AI_SESSION_ID
 
-write_session_info "$(provider_name)" "BYOK" "${ANTHROPIC_MODEL:-(system default)}" "$ANTHROPIC_SMALL_FAST_MODEL" \
-    "$(provider_get_region 2>/dev/null || echo '')" "$(provider_get_project 2>/dev/null || echo '')" \
-    "$(provider_get_auth_method)" "$(tool_flag)" "$TEAM_MODE"
+_session_backend=""
+if declare -f provider_name &>/dev/null && is_provider_loaded 2>/dev/null; then
+    _session_backend="$(provider_name)"
+elif declare -f tool_get_backend_info &>/dev/null; then
+    _session_backend="$(tool_get_backend_info)"
+fi
+_session_model="${ANTHROPIC_MODEL:-${_CODEX_MODEL:-(system default)}}"
 
-trap 'cleanup_session_info; provider_cleanup_env' EXIT
+write_session_info \
+    "${_session_backend:-$(tool_name)}" \
+    "BYOK" \
+    "$_session_model" \
+    "$ANTHROPIC_SMALL_FAST_MODEL" \
+    "$(provider_get_region 2>/dev/null || echo '')" \
+    "$(provider_get_project 2>/dev/null || echo '')" \
+    "$(declare -f provider_get_auth_method &>/dev/null && provider_get_auth_method || echo 'tool-managed')" \
+    "$(tool_flag)" \
+    "$TEAM_MODE"
+
+cleanup_on_exit() {
+    cleanup_session_info
+    declare -f provider_cleanup_env &>/dev/null && provider_cleanup_env
+}
+trap cleanup_on_exit EXIT
 
 [[ "$NEEDS_VERBOSE" == true ]] && CLAUDE_ARGS=("--verbose" "${CLAUDE_ARGS[@]}")
 
@@ -845,6 +938,19 @@ trap 'cleanup_session_info; provider_cleanup_env' EXIT
 if [[ "$QUIET_MODE" == true ]]; then
     LIVE_OUTPUT=false
     export AI_QUIET=true
+fi
+
+# Handle --effort for provider-managed tools (Claude Code passthrough)
+if [[ -n "$EFFORT_LEVEL" && "$_TOOL_SELF_MANAGED" != true ]]; then
+    CLAUDE_ARGS+=("--effort" "$EFFORT_LEVEL")
+fi
+
+# Warn about provider-gated passthrough flags
+if [[ " ${CLAUDE_ARGS[*]} " == *" --chrome "* ]]; then
+    case "$PROVIDER_FLAG" in
+        ollama|lmstudio|aws|vertex|azure|vercel)
+            print_warning "--chrome requires a direct Anthropic plan (Pro/Max). May not work with --$PROVIDER_FLAG" ;;
+    esac
 fi
 
 # Handle --live mode
@@ -863,6 +969,20 @@ if [[ -n "$TEAM_MODE" ]] && [[ -n "$MD_FILE" || -n "$STDIN_CONTENT" ]]; then
     TEAM_MODE=""
     unset CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS
 fi
+
+# Helper: print "Using: tool + backend" status line
+_print_using_status() {
+    local _using=""
+    if declare -f provider_name &>/dev/null && is_provider_loaded 2>/dev/null; then
+        _using="$(tool_name) + $(provider_name)"
+    else
+        local _bi=""
+        declare -f tool_get_backend_info &>/dev/null && _bi=$(tool_get_backend_info)
+        _using="$(tool_name)${_bi:+ + $_bi}"
+    fi
+    print_status "Using: $_using"
+    print_status "Model: ${ANTHROPIC_MODEL:-${_CODEX_MODEL:-(system default)}}"
+}
 
 if [[ -n "$MD_FILE" ]]; then
     [[ "$(head -1 "$MD_FILE")" == "#!"* ]] && CONTENT=$(tail -n +2 "$MD_FILE") || CONTENT=$(cat "$MD_FILE")
@@ -891,7 +1011,7 @@ The following input was provided via stdin:
 ---
 $STDIN_CONTENT"
     }
-    (is_interactive || [[ "$LIVE_OUTPUT" == true && -t 2 ]]) && { print_status "Using: $(tool_name) + $(provider_name)"; print_status "Model: ${ANTHROPIC_MODEL:-(system default)}"; }
+    (is_interactive || [[ "$LIVE_OUTPUT" == true && -t 2 ]]) && _print_using_status
     tool_execute_prompt "$CONTENT" "${CLAUDE_ARGS[@]}"
     exit $?
 fi
@@ -911,7 +1031,7 @@ if [[ -n "$STDIN_CONTENT" ]]; then
         _apply_var_overrides
         _substitute_vars
     fi
-    (is_interactive || [[ "$LIVE_OUTPUT" == true && -t 2 ]]) && { print_status "Using: $(tool_name) + $(provider_name)"; print_status "Model: ${ANTHROPIC_MODEL:-(system default)}"; }
+    (is_interactive || [[ "$LIVE_OUTPUT" == true && -t 2 ]]) && _print_using_status
     tool_execute_prompt "$CONTENT" "${CLAUDE_ARGS[@]}"
     exit $?
 fi
@@ -922,16 +1042,30 @@ display_banner
 source "$AI_RUNNER_SHARE_DIR/lib/update-checker.sh"
 if check_for_update; then print_update_notice; fi
 
-_activation_msg="$(tool_name) + $(provider_name) mode activated"
+_backend_name=""
+if declare -f provider_name &>/dev/null && is_provider_loaded 2>/dev/null; then
+    _backend_name="$(provider_name)"
+elif declare -f tool_get_backend_info &>/dev/null; then
+    _backend_name="$(tool_get_backend_info)"
+fi
+
+_activation_msg="$(tool_name)${_backend_name:+ + $_backend_name} mode activated"
 [[ "$USING_DEFAULTS" == true ]] && _activation_msg+=" (default)"
 print_success "$_activation_msg"
-print_status "- Provider: $(provider_name)"
-print_status "- Auth: $(provider_get_auth_method)"
-print_status "- Model: ${ANTHROPIC_MODEL:-(system default)}"
+if [[ -n "$_backend_name" ]]; then
+    print_status "- Backend: $_backend_name"
+fi
+if declare -f provider_get_auth_method &>/dev/null && is_provider_loaded 2>/dev/null; then
+    print_status "- Auth: $(provider_get_auth_method)"
+fi
+print_status "- Model: ${ANTHROPIC_MODEL:-${_CODEX_MODEL:-(system default)}}"
 [[ -n "$ANTHROPIC_SMALL_FAST_MODEL" ]] && print_status "- Small/Fast Model: $ANTHROPIC_SMALL_FAST_MODEL"
+if [[ -n "$EFFORT_LEVEL" ]]; then
+    print_status "- Effort: $EFFORT_LEVEL"
+fi
 [[ -n "$TEAM_MODE" ]] && print_status "- Agent Teams: enabled"
 # Provider-specific extra info (e.g., system capabilities for Ollama)
-provider_print_extra_info
+declare -f provider_print_extra_info &>/dev/null && provider_print_extra_info
 
 # Show auth conflict note for API key mode
 if [[ "$PROVIDER_FLAG" == "apikey" ]] && [[ -n "$ANTHROPIC_API_KEY" ]]; then
@@ -956,7 +1090,7 @@ if command -v claude &>/dev/null; then
     claude --help 2>/dev/null \
         | grep -oE '\-\-[a-zA-Z][a-zA-Z0-9-]*' \
         | sed 's/^--//' \
-        | grep -vxE 'aws|vertex|apikey|azure|vercel|pro|ollama|ol|lmstudio|lm|team|teams|opus|sonnet|haiku|high|mid|low|model|tool|cc|skip|bypass|live|quiet|version|help|set-default|clear-default|stdin-position' \
+        | grep -vxE 'aws|vertex|apikey|azure|vercel|pro|ollama|ol|lmstudio|lm|team|teams|opus|sonnet|haiku|high|mid|low|model|tool|cc|codex|skip|bypass|live|quiet|effort|profile|version|help|set-default|clear-default|stdin-position' \
         | sort -u > "$CONFIG_DIR/.cc-flags" 2>/dev/null || true
 fi
 

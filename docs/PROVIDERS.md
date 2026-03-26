@@ -18,6 +18,8 @@ AI Runner loads this file at startup. You don't need to set environment variable
 
 ## Quick Reference
 
+### Claude Code Providers
+
 | Flag | Provider | Type | Notes |
 |------|----------|------|-------|
 | `--ollama` / `--ol` | Ollama | Local | Free, no API costs, cloud option |
@@ -26,8 +28,20 @@ AI Runner loads this file at startup. You don't need to set environment variable
 | `--vertex` | Google Vertex AI | Cloud | Requires GCP project |
 | `--apikey` | Anthropic API | Cloud | Direct API access |
 | `--azure` | Microsoft Azure | Cloud | Azure Foundry |
-| `--vercel` | Vercel AI Gateway | Cloud | Any model: Anthropic,OpenAI, xAI, Google, Meta, more |
+| `--vercel` | Vercel AI Gateway | Cloud | Any model: Anthropic, OpenAI, xAI, Google, Meta, more |
 | `--pro` | Claude Pro | Subscription | Default if logged in |
+
+### Codex CLI Providers
+
+| Flag | Provider | Type | Notes |
+|------|----------|------|-------|
+| *(default)* | OpenAI API | Cloud | Requires `OPENAI_API_KEY` |
+| `--ollama` / `--ol` | Ollama | Local | Via `--oss --local-provider ollama` |
+| `--lmstudio` / `--lm` | LM Studio | Local | Via `--oss --local-provider lmstudio` |
+| `--azure` | Azure OpenAI | Cloud | Requires `~/.codex/config.toml` setup |
+| `--profile <name>` | Custom | Any | OpenRouter, Mistral, DeepSeek, xAI, Groq, etc. |
+
+Codex custom providers are configured in `~/.codex/config.toml`. See [Codex CLI docs](https://developers.openai.com/codex/cli) for details.
 
 **Agent Teams:** All providers support agent teams (`ai --team`). Coordination uses Claude Code's internal task list and mailbox, not provider-specific features. See [Claude Code Agent Teams docs](https://code.claude.com/docs/en/agent-teams).
 
@@ -402,3 +416,95 @@ All wrapper scripts are session-scoped:
 - Running `claude` in another terminal is unaffected
 
 This means you can safely run `ai --lmstudio` in one terminal while using `claude` normally in another.
+
+---
+
+## Codex CLI Setup
+
+[Codex CLI](https://developers.openai.com/codex/cli) is OpenAI's coding agent. AI Runner supports it as an alternative runtime alongside Claude Code.
+
+### Installation
+
+```bash
+npm install -g @openai/codex
+# Or on macOS:
+brew install --cask codex
+```
+
+### Authentication
+
+Set your OpenAI API key in `~/.ai-runner/secrets.sh`:
+```bash
+export OPENAI_API_KEY="sk-..."
+```
+
+### Browser Authentication (Default)
+
+Codex uses browser login by default — no API key required:
+
+```bash
+codex login                  # One-time browser login via ChatGPT
+ai --codex task.md           # Uses stored browser tokens
+```
+
+Use `--apikey` to force API key auth (for CI/CD or headless environments):
+
+```bash
+ai --codex --apikey task.md  # Requires OPENAI_API_KEY in environment
+```
+
+### Usage
+
+```bash
+ai --codex                        # Interactive Codex session
+ai --codex task.md                # Run script with Codex
+ai --codex --high task.md         # Use gpt-5.4 (flagship)
+ai --codex --auto task.md         # Smart auto-approve (sandboxed)
+ai --codex --effort high task.md  # Higher reasoning effort
+```
+
+### Model Tiers
+
+| Flag | Codex Model | Notes |
+|------|-------------|-------|
+| `--high` / `--opus` | gpt-5.4 | Flagship model |
+| `--mid` / `--sonnet` | gpt-5.3-codex | Coding-focused (default) |
+| `--low` / `--haiku` | gpt-5.4-mini | Fast and efficient |
+
+Override in `~/.ai-runner/secrets.sh`:
+```bash
+export CODEX_MODEL_HIGH="gpt-5.4"
+export CODEX_MODEL_MID="gpt-5.3-codex"
+export CODEX_MODEL_LOW="gpt-5.4-mini"
+```
+
+### Local Models with Codex
+
+```bash
+ai --codex --ollama               # Use Ollama with Codex
+ai --codex --lmstudio             # Use LM Studio with Codex
+```
+
+### Custom Providers (Azure OpenAI, OpenRouter, etc.)
+
+Codex supports many providers via `~/.codex/config.toml`. Configure the provider, then select it with `--azure` or `--profile`:
+
+```toml
+# ~/.codex/config.toml
+[model_providers.azure]
+name = "Azure OpenAI"
+base_url = "https://YOUR_RESOURCE.openai.azure.com/openai/v1"
+env_key = "AZURE_OPENAI_API_KEY"
+
+[model_providers.openrouter]
+name = "OpenRouter"
+base_url = "https://openrouter.ai/api/v1"
+env_key = "OPENROUTER_API_KEY"
+```
+
+```bash
+ai --codex --azure task.md           # Azure OpenAI
+ai --codex --profile openrouter      # OpenRouter
+```
+
+See the [Codex CLI docs](https://developers.openai.com/codex/cli) for the full config reference.

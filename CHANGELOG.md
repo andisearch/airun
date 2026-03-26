@@ -5,6 +5,22 @@ All notable changes to AI Runner will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.5.0] - 2026-03-25
+
+### Added
+- **Codex CLI support**: AI Runner now supports Codex CLI (OpenAI) as an alternative runtime alongside Claude Code. Use `--codex` flag or `--tool codex` to select it.
+- **Cross-interpreter model tiers**: `--opus/--high`, `--sonnet/--mid`, `--haiku/--low` work with both Claude Code and Codex, mapping to each tool's model ecosystem
+- **Cross-interpreter effort levels**: `--effort <low|medium|high|max>` sets reasoning effort for both interpreters. Maps to Claude Code's `--effort` and Codex's `model_reasoning_effort` (max → xhigh)
+- **Tool profiles**: `--profile <name>` selects named config profiles (Codex: `~/.codex/config.toml` profiles for Azure OpenAI, OpenRouter, etc.)
+- **Cross-interpreter provider shortcuts**: `--ollama`, `--lmstudio` work with both tools. `--azure` maps to Azure OpenAI for Codex.
+- **Tool defaults**: `--set-default` now persists tool selection alongside provider/model
+- **Self-managed tool pattern**: New `tool_needs_provider()` interface for tools that bypass the Anthropic provider system
+- **Auto permission mode**: `--auto` smart auto-approve — AI classifier for Claude Code, sandbox for Codex
+- **Cross-interpreter `--resume`**: Resume sessions works with both runtimes (Codex maps to `codex resume --last`)
+- **Codex browser auth**: Codex uses ChatGPT browser login by default (no API key required). Use `--apikey` to force API key auth for CI/CD
+- **Flag firewall**: Interpreter-specific flags gracefully degrade — scripts are portable across runtimes with warnings instead of errors
+- **Provider-gated warnings**: `--chrome` warns when used with non-direct-Anthropic providers (Ollama, Bedrock, etc.)
+
 ## [2.4.5] - 2026-03-19
 
 ### Added

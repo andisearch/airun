@@ -136,6 +136,15 @@ export CLAUDE_SMALL_FAST_MODEL_VERCEL="${CLAUDE_SMALL_FAST_MODEL_VERCEL:-${CLAUD
 # See: https://code.claude.com/docs/en/model-config#environment-variables
 
 # ============================================================================
+# Codex CLI (OpenAI) Model Defaults
+# ============================================================================
+# Used when running: ai --codex
+# Override in ~/.ai-runner/secrets.sh
+export CODEX_MODEL_HIGH="${CODEX_MODEL_HIGH:-gpt-5.4}"
+export CODEX_MODEL_MID="${CODEX_MODEL_MID:-gpt-5.3-codex}"
+export CODEX_MODEL_LOW="${CODEX_MODEL_LOW:-gpt-5.4-mini}"
+
+# ============================================================================
 # IMPLEMENTATION NOTES
 # ============================================================================
 # 

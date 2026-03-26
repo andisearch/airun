@@ -130,7 +130,7 @@ load_defaults() {
 }
 
 save_defaults() {
-    local provider="$1" model_tier="$2" custom_model="$3" team_mode="${4:-}" teammate_mode="${5:-}"
+    local provider="$1" model_tier="$2" custom_model="$3" team_mode="${4:-}" teammate_mode="${5:-}" tool="${6:-}" effort="${7:-}"
     mkdir -p "$CONFIG_DIR"
     cat > "$DEFAULTS_FILE" << EOF
 # AI Runner defaults (set by: ai --set-default)
@@ -139,10 +139,15 @@ AI_DEFAULT_MODEL_TIER="$model_tier"
 AI_DEFAULT_CUSTOM_MODEL="$custom_model"
 AI_DEFAULT_TEAM_MODE="$team_mode"
 AI_DEFAULT_TEAMMATE_MODE="$teammate_mode"
+AI_DEFAULT_TOOL="$tool"
+AI_DEFAULT_EFFORT="$effort"
 EOF
-    local desc="${provider}"
+    local desc=""
+    [[ -n "$tool" && "$tool" != "cc" ]] && desc+="--${tool} "
+    desc+="${provider}"
     [[ -n "$model_tier" ]] && desc+=" --${model_tier}"
     [[ -n "$custom_model" ]] && desc+=" --model ${custom_model}"
+    [[ -n "$effort" ]] && desc+=" --effort ${effort}"
     [[ -n "$team_mode" ]] && desc+=" --team"
     [[ -n "$teammate_mode" ]] && desc+=" --teammate-mode ${teammate_mode}"
     print_success "Saved default: ${desc}"
@@ -155,10 +160,13 @@ clear_defaults() {
 
 format_defaults() {
     if [ ! -f "$DEFAULTS_FILE" ]; then return 1; fi
-    local desc="${AI_DEFAULT_PROVIDER}"
-    [[ -z "$desc" ]] && return 1
+    local desc=""
+    [[ -n "$AI_DEFAULT_TOOL" && "$AI_DEFAULT_TOOL" != "cc" ]] && desc+="--${AI_DEFAULT_TOOL} "
+    desc+="${AI_DEFAULT_PROVIDER}"
+    [[ -z "$AI_DEFAULT_PROVIDER" && -z "$AI_DEFAULT_TOOL" ]] && return 1
     [[ -n "$AI_DEFAULT_MODEL_TIER" ]] && desc+=" --${AI_DEFAULT_MODEL_TIER}"
     [[ -n "$AI_DEFAULT_CUSTOM_MODEL" ]] && desc+=" --model ${AI_DEFAULT_CUSTOM_MODEL}"
+    [[ -n "$AI_DEFAULT_EFFORT" ]] && desc+=" --effort ${AI_DEFAULT_EFFORT}"
     [[ -n "$AI_DEFAULT_TEAM_MODE" ]] && desc+=" --team"
     [[ -n "$AI_DEFAULT_TEAMMATE_MODE" ]] && desc+=" --teammate-mode ${AI_DEFAULT_TEAMMATE_MODE}"
     echo "$desc"
