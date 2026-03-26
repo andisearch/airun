@@ -468,7 +468,7 @@ ai --codex --effort high task.md  # Higher reasoning effort
 | Flag | Codex Model | Notes |
 |------|-------------|-------|
 | `--high` / `--opus` | gpt-5.4 | Flagship model |
-| `--mid` / `--sonnet` | gpt-5.3-codex | Coding-focused (default) |
+| `--mid` / `--sonnet` | gpt-5.3-codex | Coding-focused |
 | `--low` / `--haiku` | gpt-5.4-mini | Fast and efficient |
 
 Override in `~/.ai-runner/secrets.sh`:

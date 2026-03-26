@@ -9,7 +9,7 @@ ai --aws --opus --team --resume           # Resume chats on AWS w/ Opus 4.6 + Ag
 ai --ollama --bypass --model qwen3-coder  # Ollama local model with bypassPermissions set
 
 # Codex CLI: OpenAI's coding agent
-ai --codex                                # Codex with OpenAI API (gpt-5.3-codex)
+ai --codex                                # Codex with gpt-5.4 (default)
 ai --codex --high                         # Codex with gpt-5.4 (flagship)
 ai --codex --ollama                       # Codex with local Ollama models
 
@@ -109,7 +109,9 @@ This works for simple prompts but lacks provider switching, model selection, std
 | `ai-sessions` | View active AI coding sessions |
 | `ai-status` | Show current configuration and provider status |
 
-Running `ai` with no flags is equivalent to running `claude` with your regular subscription settings, but session-scoped. Your environment is automatically restored on exit. Add provider flags to switch, or use `ai --aws --opus --set-default` to save your preferred provider and model for future runs.
+Running `ai` with no flags is equivalent to running `claude` directly — same auth, same model defaults, session-scoped. Your environment is passed through unmodified. Add provider flags to switch, or use `ai --aws --opus --set-default` to save your preferred provider and model for future runs.
+
+> **Note:** If `ANTHROPIC_API_KEY` is set in your environment, `ai` will use it (matching native `claude -p` behavior). Use `ai --pro` to force subscription, or `ai --pro --set-default` to make it permanent.
 
 ### Usage Examples
 
@@ -141,7 +143,7 @@ ai --lmstudio                     # LM Studio (MLX, Apple Silicon)
 
 # Model tiers (map to each runtime's best models)
 ai --opus task.md                 # Claude: Opus 4.6 / Codex: gpt-5.4
-ai --sonnet task.md               # Claude: Sonnet 4.6 / Codex: gpt-5.3-codex
+ai --sonnet task.md               # Claude: Sonnet 4.6 / Codex: gpt-5.3-codex (mid tier)
 ai --haiku task.md                # Claude: Haiku 4.5 / Codex: gpt-5.4-mini
 ai --codex --high task.md         # Codex with gpt-5.4
 
@@ -354,8 +356,8 @@ ai --team --teammate-mode tmux   # Split panes via tmux
 
 | Flag | Runtime | Default Model | Install |
 |------|---------|---------------|---------|
-| `--cc` | Claude Code | claude-sonnet-4-6 | `curl -fsSL https://claude.ai/install.sh \| bash` |
-| `--codex` | Codex CLI | gpt-5.3-codex | `npm install -g @openai/codex` |
+| `--cc` | Claude Code | claude-opus-4-6 | `curl -fsSL https://claude.ai/install.sh \| bash` |
+| `--codex` | Codex CLI | gpt-5.4 | `npm install -g @openai/codex` |
 
 Claude Code is the default runtime when both are installed. If only Codex is installed, it becomes the default automatically.
 
@@ -387,7 +389,7 @@ ai --aws --opus task.md        # AWS Bedrock + Opus 4.6
 ai --vertex task.md            # Google Vertex AI
 
 # Codex CLI cloud providers
-ai --codex task.md             # OpenAI API + gpt-5.3-codex
+ai --codex task.md             # OpenAI API + gpt-5.4
 ai --codex --azure task.md     # Azure OpenAI (config.toml)
 ```
 
@@ -610,10 +612,11 @@ ai-status                              # Shows authentication and configuration
 
 ### Session-Scoped Behavior
 
-`ai` with no flags uses your regular Claude subscription, identical to running `claude` directly. Provider flags (`--aws`, `--ollama`, etc.) only affect the current session:
+`ai` with no flags matches your system `claude` configuration — same auth method and model defaults as running `claude` directly. Provider flags (`--aws`, `--ollama`, etc.) only affect the current session:
 - On exit, your original Claude settings are automatically restored
 - Plain `claude` in another terminal is completely unaffected
 - No global configuration is changed
+- If `ANTHROPIC_API_KEY` is in your environment, `ai` uses it (matching `claude -p`). Use `ai --pro` to force subscription.
 
 ## Versioning
 

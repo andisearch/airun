@@ -154,7 +154,7 @@
 # Override the default models used for each tier (--high, --mid, --low)
 # Recommended: Use models with 64K+ context for Claude Code compatibility
 # export OLLAMA_MODEL_HIGH="qwen3:72b"           # For --opus/--high
-# export OLLAMA_MODEL_MID="qwen3-coder:32b"      # For --sonnet/--mid (default)
+# export OLLAMA_MODEL_MID="qwen3-coder:32b"      # For --sonnet/--mid
 # export OLLAMA_MODEL_LOW="qwen3:8b"             # For --haiku/--low
 #
 # Cloud models (no GPU required, 198K context):

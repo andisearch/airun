@@ -333,11 +333,15 @@ source "$AI_RUNNER_SHARE_DIR/lib/core-utils.sh"
 source "$AI_RUNNER_SHARE_DIR/lib/provider-loader.sh"
 source "$AI_RUNNER_SHARE_DIR/lib/tool-loader.sh"
 
+# --- Save system ANTHROPIC_API_KEY for passthrough mode ---
+_ORIG_API_KEY_WAS_SET=false
+[[ -n "${ANTHROPIC_API_KEY+x}" ]] && { _ORIG_API_KEY_WAS_SET=true; _ORIG_API_KEY="$ANTHROPIC_API_KEY"; }
+
 # --- Process isolation for nested/composable scripts ---
 # When ai scripts call other ai scripts, children inherit the parent's
 # exported env vars. Clear AI Runner-controlled vars so each invocation
 # starts fresh, like a new bash shell.
-unset ANTHROPIC_MODEL ANTHROPIC_SMALL_FAST_MODEL
+unset ANTHROPIC_API_KEY ANTHROPIC_MODEL ANTHROPIC_SMALL_FAST_MODEL
 unset ANTHROPIC_BASE_URL ANTHROPIC_AUTH_TOKEN
 unset CLAUDE_CODE_USE_BEDROCK CLAUDE_CODE_USE_VERTEX CLAUDE_CODE_USE_FOUNDRY
 unset AI_LIVE_OUTPUT AI_QUIET AI_SESSION_ID CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS
@@ -661,8 +665,8 @@ Provider flags (pick one):
   --lmstudio, --lm             Local LM Studio (MLX support)
 
 Model flags (pick one):
-  --opus, --high               Highest-tier model
-  --sonnet, --mid              Mid-tier model (default)
+  --opus, --high               Highest-tier model (default)
+  --sonnet, --mid              Mid-tier model
   --haiku, --low               Lowest-tier model
   --model <id>                 Specific model ID (e.g. claude-opus-4-6)
 
@@ -801,6 +805,14 @@ if [[ -z "$CLI_PROVIDER_FLAG" && -z "$CLI_MODEL_TIER" && -z "$CLI_CUSTOM_MODEL" 
     USING_DEFAULTS=true
 fi
 
+# Passthrough mode: no provider specified → transparent wrapper
+_PASSTHROUGH_MODE=false
+if [[ -z "$PROVIDER_FLAG" && -z "$DEFAULT_PROVIDER" ]]; then
+    _PASSTHROUGH_MODE=true
+elif [[ -z "$PROVIDER_FLAG" && -n "$DEFAULT_PROVIDER" ]]; then
+    PROVIDER_FLAG="$DEFAULT_PROVIDER"
+fi
+
 # First-time setup (if needed and interactive)
 if needs_first_time_setup && is_interactive; then
     run_first_time_setup || exit 1
@@ -838,56 +850,69 @@ if [[ "$_TOOL_SELF_MANAGED" == true ]]; then
             fi
         fi
     fi
-    if [[ -z "$MODEL_TIER" && -z "$CUSTOM_MODEL" ]]; then
-        MODEL_TIER="mid"
-    fi
+    # Self-managed tools handle their own model defaults.
+    # Only pass a model if the user explicitly chose one (--high, --mid, --model, etc.)
     if ! tool_setup_env; then
         exit 1
     fi
 else
     # Provider-managed tool (Claude Code): existing provider flow
-    [[ -z "$PROVIDER_FLAG" ]] && { PROVIDER_FLAG=$(detect_default_provider); [[ -z "$PROVIDER_FLAG" ]] && { print_no_provider_error; exit 1; }; }
-    load_provider "$PROVIDER_FLAG" || exit 1
+    if [[ "$_PASSTHROUGH_MODE" == true ]]; then
+        # Passthrough: restore system ANTHROPIC_API_KEY — match native claude
+        if [[ "$_ORIG_API_KEY_WAS_SET" == true ]]; then
+            export ANTHROPIC_API_KEY="$_ORIG_API_KEY"
+        fi
+        if [[ -n "$MODEL_TIER" ]]; then
+            case "$MODEL_TIER" in
+                high|opus)   export ANTHROPIC_MODEL="claude-opus-4-6" ;;
+                mid|sonnet)  export ANTHROPIC_MODEL="claude-sonnet-4-6" ;;
+                low|haiku)   export ANTHROPIC_MODEL="claude-haiku-4-5" ;;
+            esac
+        fi
+    else
+        [[ -z "$PROVIDER_FLAG" ]] && { PROVIDER_FLAG=$(detect_default_provider); [[ -z "$PROVIDER_FLAG" ]] && { print_no_provider_error; exit 1; }; }
+        load_provider "$PROVIDER_FLAG" || exit 1
 
-    # Validate and setup provider (with fallback for local providers)
-    _PROVIDER_FAILED=false
-    if ! provider_validate_config; then
-        if [[ "$PROVIDER_FLAG" == "lmstudio" || "$PROVIDER_FLAG" == "ollama" ]]; then
-            provider_get_validation_error >&2; _PROVIDER_FAILED=true
-        else
-            provider_get_validation_error >&2; exit 1
-        fi
-    fi
-    if [[ "$_PROVIDER_FAILED" == false ]]; then
-        if ! tool_supports_provider "$PROVIDER_FLAG"; then
-            print_warning "$(tool_name) may not fully support $(provider_name)"
-        fi
-        if [[ -z "$MODEL_TIER" && -z "$CUSTOM_MODEL" && "$PROVIDER_FLAG" != "pro" ]]; then
-            MODEL_TIER="mid"
-        fi
-        if ! provider_setup_env "$MODEL_TIER" "$CUSTOM_MODEL"; then
+        # Validate and setup provider (with fallback for local providers)
+        _PROVIDER_FAILED=false
+        if ! provider_validate_config; then
             if [[ "$PROVIDER_FLAG" == "lmstudio" || "$PROVIDER_FLAG" == "ollama" ]]; then
-                _PROVIDER_FAILED=true
+                provider_get_validation_error >&2; _PROVIDER_FAILED=true
             else
-                exit 1
+                provider_get_validation_error >&2; exit 1
             fi
         fi
-    fi
-    if [[ "$_PROVIDER_FAILED" == true ]]; then
-        echo "" >&2
-        MODEL_TIER=""; CUSTOM_MODEL=""
-        _FAILED_PROVIDER="$PROVIDER_FLAG"
-        _saved_dp="$DEFAULT_PROVIDER"; DEFAULT_PROVIDER=""
-        PROVIDER_FLAG=$(detect_default_provider)
-        DEFAULT_PROVIDER="$_saved_dp"
-        if [[ -z "$PROVIDER_FLAG" || "$PROVIDER_FLAG" == "$_FAILED_PROVIDER" ]]; then
-            print_error "No fallback provider available. Run ai-status to check your setup."; exit 1
+        if [[ "$_PROVIDER_FAILED" == false ]]; then
+            if ! tool_supports_provider "$PROVIDER_FLAG"; then
+                print_warning "$(tool_name) may not fully support $(provider_name)"
+            fi
+            if [[ -z "$MODEL_TIER" && -z "$CUSTOM_MODEL" && "$PROVIDER_FLAG" != "pro" ]]; then
+                MODEL_TIER="high"
+            fi
+            if ! provider_setup_env "$MODEL_TIER" "$CUSTOM_MODEL"; then
+                if [[ "$PROVIDER_FLAG" == "lmstudio" || "$PROVIDER_FLAG" == "ollama" ]]; then
+                    _PROVIDER_FAILED=true
+                else
+                    exit 1
+                fi
+            fi
         fi
-        load_provider "$PROVIDER_FLAG" || exit 1
-        provider_validate_config || { provider_get_validation_error >&2; exit 1; }
-        [[ -z "$MODEL_TIER" && -z "$CUSTOM_MODEL" && "$PROVIDER_FLAG" != "pro" ]] && MODEL_TIER="mid"
-        provider_setup_env "$MODEL_TIER" "$CUSTOM_MODEL" || exit 1
-        print_warning "Falling back to $(provider_name)"
+        if [[ "$_PROVIDER_FAILED" == true ]]; then
+            echo "" >&2
+            MODEL_TIER=""; CUSTOM_MODEL=""
+            _FAILED_PROVIDER="$PROVIDER_FLAG"
+            _saved_dp="$DEFAULT_PROVIDER"; DEFAULT_PROVIDER=""
+            PROVIDER_FLAG=$(detect_default_provider)
+            DEFAULT_PROVIDER="$_saved_dp"
+            if [[ -z "$PROVIDER_FLAG" || "$PROVIDER_FLAG" == "$_FAILED_PROVIDER" ]]; then
+                print_error "No fallback provider available. Run ai-status to check your setup."; exit 1
+            fi
+            load_provider "$PROVIDER_FLAG" || exit 1
+            provider_validate_config || { provider_get_validation_error >&2; exit 1; }
+            [[ -z "$MODEL_TIER" && -z "$CUSTOM_MODEL" && "$PROVIDER_FLAG" != "pro" ]] && MODEL_TIER="high"
+            provider_setup_env "$MODEL_TIER" "$CUSTOM_MODEL" || exit 1
+            print_warning "Falling back to $(provider_name)"
+        fi
     fi
 fi
 
@@ -968,6 +993,17 @@ if [[ -n "$TEAM_MODE" ]] && [[ -n "$MD_FILE" || -n "$STDIN_CONTENT" ]]; then
     [[ -n "$CLI_TEAM_MODE" ]] && print_warning "Agent teams (--team) requires interactive mode. Ignoring flag."
     TEAM_MODE=""
     unset CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS
+fi
+
+# SESSION ISOLATION: Defensive unset before tool execution
+# In passthrough mode, the system env is already restored — don't touch it.
+if [[ "$_PASSTHROUGH_MODE" != true && "$PROVIDER_FLAG" != "apikey" ]]; then
+    unset ANTHROPIC_API_KEY
+fi
+if [[ "$_TOOL_SELF_MANAGED" == true ]]; then
+    unset ANTHROPIC_API_KEY ANTHROPIC_MODEL ANTHROPIC_SMALL_FAST_MODEL
+    unset ANTHROPIC_BASE_URL ANTHROPIC_AUTH_TOKEN
+    unset CLAUDE_CODE_USE_BEDROCK CLAUDE_CODE_USE_VERTEX CLAUDE_CODE_USE_FOUNDRY
 fi
 
 # Helper: print "Using: tool + backend" status line

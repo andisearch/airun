@@ -115,8 +115,8 @@ PROVIDER FLAGS:
   --pro       Use Claude Pro/Max subscription
 
 MODEL FLAGS:
-  --opus      Use Opus 4.5
-  --sonnet    Use Sonnet 4.6 (default)
+  --opus      Use Opus 4.6 (default)
+  --sonnet    Use Sonnet 4.6
   --haiku    Use Haiku 4.5
   --model ID  Use specific model ID
 
