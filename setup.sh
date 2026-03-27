@@ -847,48 +847,47 @@ if [[ "$_TOOL_SELF_MANAGED" == true ]]; then
 else
     # Provider-managed tool (Claude Code): existing provider flow
     [[ -z "$PROVIDER_FLAG" ]] && { PROVIDER_FLAG=$(detect_default_provider); [[ -z "$PROVIDER_FLAG" ]] && { print_no_provider_error; exit 1; }; }
-        load_provider "$PROVIDER_FLAG" || exit 1
+    load_provider "$PROVIDER_FLAG" || exit 1
 
-        # Validate and setup provider (with fallback for local providers)
-        _PROVIDER_FAILED=false
-        if ! provider_validate_config; then
+    # Validate and setup provider (with fallback for local providers)
+    _PROVIDER_FAILED=false
+    if ! provider_validate_config; then
+        if [[ "$PROVIDER_FLAG" == "lmstudio" || "$PROVIDER_FLAG" == "ollama" ]]; then
+            provider_get_validation_error >&2; _PROVIDER_FAILED=true
+        else
+            provider_get_validation_error >&2; exit 1
+        fi
+    fi
+    if [[ "$_PROVIDER_FAILED" == false ]]; then
+        if ! tool_supports_provider "$PROVIDER_FLAG"; then
+            print_warning "$(tool_name) may not fully support $(provider_name)"
+        fi
+        if [[ -z "$MODEL_TIER" && -z "$CUSTOM_MODEL" && "$PROVIDER_FLAG" != "pro" ]]; then
+            MODEL_TIER="high"
+        fi
+        if ! provider_setup_env "$MODEL_TIER" "$CUSTOM_MODEL"; then
             if [[ "$PROVIDER_FLAG" == "lmstudio" || "$PROVIDER_FLAG" == "ollama" ]]; then
-                provider_get_validation_error >&2; _PROVIDER_FAILED=true
+                _PROVIDER_FAILED=true
             else
-                provider_get_validation_error >&2; exit 1
+                exit 1
             fi
         fi
-        if [[ "$_PROVIDER_FAILED" == false ]]; then
-            if ! tool_supports_provider "$PROVIDER_FLAG"; then
-                print_warning "$(tool_name) may not fully support $(provider_name)"
-            fi
-            if [[ -z "$MODEL_TIER" && -z "$CUSTOM_MODEL" && "$PROVIDER_FLAG" != "pro" ]]; then
-                MODEL_TIER="high"
-            fi
-            if ! provider_setup_env "$MODEL_TIER" "$CUSTOM_MODEL"; then
-                if [[ "$PROVIDER_FLAG" == "lmstudio" || "$PROVIDER_FLAG" == "ollama" ]]; then
-                    _PROVIDER_FAILED=true
-                else
-                    exit 1
-                fi
-            fi
+    fi
+    if [[ "$_PROVIDER_FAILED" == true ]]; then
+        echo "" >&2
+        MODEL_TIER=""; CUSTOM_MODEL=""
+        _FAILED_PROVIDER="$PROVIDER_FLAG"
+        _saved_dp="$DEFAULT_PROVIDER"; DEFAULT_PROVIDER=""
+        PROVIDER_FLAG=$(detect_default_provider)
+        DEFAULT_PROVIDER="$_saved_dp"
+        if [[ -z "$PROVIDER_FLAG" || "$PROVIDER_FLAG" == "$_FAILED_PROVIDER" ]]; then
+            print_error "No fallback provider available. Run ai-status to check your setup."; exit 1
         fi
-        if [[ "$_PROVIDER_FAILED" == true ]]; then
-            echo "" >&2
-            MODEL_TIER=""; CUSTOM_MODEL=""
-            _FAILED_PROVIDER="$PROVIDER_FLAG"
-            _saved_dp="$DEFAULT_PROVIDER"; DEFAULT_PROVIDER=""
-            PROVIDER_FLAG=$(detect_default_provider)
-            DEFAULT_PROVIDER="$_saved_dp"
-            if [[ -z "$PROVIDER_FLAG" || "$PROVIDER_FLAG" == "$_FAILED_PROVIDER" ]]; then
-                print_error "No fallback provider available. Run ai-status to check your setup."; exit 1
-            fi
-            load_provider "$PROVIDER_FLAG" || exit 1
-            provider_validate_config || { provider_get_validation_error >&2; exit 1; }
-            [[ -z "$MODEL_TIER" && -z "$CUSTOM_MODEL" && "$PROVIDER_FLAG" != "pro" ]] && MODEL_TIER="high"
-            provider_setup_env "$MODEL_TIER" "$CUSTOM_MODEL" || exit 1
-            print_warning "Falling back to $(provider_name)"
-        fi
+        load_provider "$PROVIDER_FLAG" || exit 1
+        provider_validate_config || { provider_get_validation_error >&2; exit 1; }
+        [[ -z "$MODEL_TIER" && -z "$CUSTOM_MODEL" && "$PROVIDER_FLAG" != "pro" ]] && MODEL_TIER="high"
+        provider_setup_env "$MODEL_TIER" "$CUSTOM_MODEL" || exit 1
+        print_warning "Falling back to $(provider_name)"
     fi
 fi
 
