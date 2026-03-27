@@ -13,6 +13,7 @@ Executable markdown scripts showing key AI Runner features. Run from any repo.
 | `live-report.md` | `--sonnet --skip --live` | Live streaming — explores repo and streams a report |
 | `analyze-stdin.md` | `--haiku` | Stdin piping — cheap model for `cat data.json \| ./analyze-stdin.md` |
 | `summarize-topic.md` | `--haiku` + vars | Variables — front-matter defaults with `--varname` CLI overrides |
+| `office-hours.md` | `--opus --skip --live` + vars | Agentic workflow — runs gstack /office-hours methodology against any repo |
 
 ## Running
 
