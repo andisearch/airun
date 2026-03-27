@@ -333,15 +333,11 @@ source "$AI_RUNNER_SHARE_DIR/lib/core-utils.sh"
 source "$AI_RUNNER_SHARE_DIR/lib/provider-loader.sh"
 source "$AI_RUNNER_SHARE_DIR/lib/tool-loader.sh"
 
-# --- Save system ANTHROPIC_API_KEY for passthrough mode ---
-_ORIG_API_KEY_WAS_SET=false
-[[ -n "${ANTHROPIC_API_KEY+x}" ]] && { _ORIG_API_KEY_WAS_SET=true; _ORIG_API_KEY="$ANTHROPIC_API_KEY"; }
-
 # --- Process isolation for nested/composable scripts ---
 # When ai scripts call other ai scripts, children inherit the parent's
 # exported env vars. Clear AI Runner-controlled vars so each invocation
 # starts fresh, like a new bash shell.
-unset ANTHROPIC_API_KEY ANTHROPIC_MODEL ANTHROPIC_SMALL_FAST_MODEL
+unset ANTHROPIC_MODEL ANTHROPIC_SMALL_FAST_MODEL
 unset ANTHROPIC_BASE_URL ANTHROPIC_AUTH_TOKEN
 unset CLAUDE_CODE_USE_BEDROCK CLAUDE_CODE_USE_VERTEX CLAUDE_CODE_USE_FOUNDRY
 unset AI_LIVE_OUTPUT AI_QUIET AI_SESSION_ID CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS
@@ -805,13 +801,6 @@ if [[ -z "$CLI_PROVIDER_FLAG" && -z "$CLI_MODEL_TIER" && -z "$CLI_CUSTOM_MODEL" 
     USING_DEFAULTS=true
 fi
 
-# Passthrough mode: no provider specified → transparent wrapper
-_PASSTHROUGH_MODE=false
-if [[ -z "$PROVIDER_FLAG" && -z "$DEFAULT_PROVIDER" ]]; then
-    _PASSTHROUGH_MODE=true
-elif [[ -z "$PROVIDER_FLAG" && -n "$DEFAULT_PROVIDER" ]]; then
-    PROVIDER_FLAG="$DEFAULT_PROVIDER"
-fi
 
 # First-time setup (if needed and interactive)
 if needs_first_time_setup && is_interactive; then
@@ -857,20 +846,7 @@ if [[ "$_TOOL_SELF_MANAGED" == true ]]; then
     fi
 else
     # Provider-managed tool (Claude Code): existing provider flow
-    if [[ "$_PASSTHROUGH_MODE" == true ]]; then
-        # Passthrough: restore system ANTHROPIC_API_KEY — match native claude
-        if [[ "$_ORIG_API_KEY_WAS_SET" == true ]]; then
-            export ANTHROPIC_API_KEY="$_ORIG_API_KEY"
-        fi
-        if [[ -n "$MODEL_TIER" ]]; then
-            case "$MODEL_TIER" in
-                high|opus)   export ANTHROPIC_MODEL="claude-opus-4-6" ;;
-                mid|sonnet)  export ANTHROPIC_MODEL="claude-sonnet-4-6" ;;
-                low|haiku)   export ANTHROPIC_MODEL="claude-haiku-4-5" ;;
-            esac
-        fi
-    else
-        [[ -z "$PROVIDER_FLAG" ]] && { PROVIDER_FLAG=$(detect_default_provider); [[ -z "$PROVIDER_FLAG" ]] && { print_no_provider_error; exit 1; }; }
+    [[ -z "$PROVIDER_FLAG" ]] && { PROVIDER_FLAG=$(detect_default_provider); [[ -z "$PROVIDER_FLAG" ]] && { print_no_provider_error; exit 1; }; }
         load_provider "$PROVIDER_FLAG" || exit 1
 
         # Validate and setup provider (with fallback for local providers)
@@ -995,11 +971,6 @@ if [[ -n "$TEAM_MODE" ]] && [[ -n "$MD_FILE" || -n "$STDIN_CONTENT" ]]; then
     unset CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS
 fi
 
-# SESSION ISOLATION: Defensive unset before tool execution
-# In passthrough mode, the system env is already restored — don't touch it.
-if [[ "$_PASSTHROUGH_MODE" != true && "$PROVIDER_FLAG" != "apikey" ]]; then
-    unset ANTHROPIC_API_KEY
-fi
 if [[ "$_TOOL_SELF_MANAGED" == true ]]; then
     unset ANTHROPIC_API_KEY ANTHROPIC_MODEL ANTHROPIC_SMALL_FAST_MODEL
     unset ANTHROPIC_BASE_URL ANTHROPIC_AUTH_TOKEN

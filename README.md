@@ -109,9 +109,7 @@ This works for simple prompts but lacks provider switching, model selection, std
 | `ai-sessions` | View active AI coding sessions |
 | `ai-status` | Show current configuration and provider status |
 
-Running `ai` with no flags is equivalent to running `claude` directly — same auth, same model defaults, session-scoped. Your environment is passed through unmodified. Add provider flags to switch, or use `ai --aws --opus --set-default` to save your preferred provider and model for future runs.
-
-> **Note:** If `ANTHROPIC_API_KEY` is set in your environment, `ai` will use it (matching native `claude -p` behavior). Use `ai --pro` to force subscription, or `ai --pro --set-default` to make it permanent.
+Running `ai` with no flags matches your `claude` defaults — if you're logged in with a subscription, `ai` uses it. Your environment is automatically restored on exit. Add provider flags to switch, or use `ai --aws --opus --set-default` to save your preferred provider and model for future runs.
 
 ### Usage Examples
 
@@ -612,11 +610,10 @@ ai-status                              # Shows authentication and configuration
 
 ### Session-Scoped Behavior
 
-`ai` with no flags matches your system `claude` configuration — same auth method and model defaults as running `claude` directly. Provider flags (`--aws`, `--ollama`, etc.) only affect the current session:
+`ai` with no flags matches your `claude` defaults — subscription if logged in, API key if configured. Provider flags (`--aws`, `--ollama`, etc.) only affect the current session:
 - On exit, your original Claude settings are automatically restored
 - Plain `claude` in another terminal is completely unaffected
 - No global configuration is changed
-- If `ANTHROPIC_API_KEY` is in your environment, `ai` uses it (matching `claude -p`). Use `ai --pro` to force subscription.
 
 ## Versioning
 

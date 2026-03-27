@@ -1719,83 +1719,27 @@ test_front_matter_example() {
 test_session_isolation() {
     test_header "Session Isolation"
     local ai_script="$PROJECT_DIR/scripts/ai"
+    local setup_heredoc="$PROJECT_DIR/setup.sh"
 
-    # 1. Process isolation block includes ANTHROPIC_API_KEY
-    if grep -A10 'Process isolation' "$ai_script" | grep -q 'unset ANTHROPIC_API_KEY'; then
-        pass "Process isolation clears ANTHROPIC_API_KEY"
-    else
-        fail "Process isolation must unset ANTHROPIC_API_KEY"
-    fi
-
-    # 2. Defensive unset before tool execution
-    if grep -B2 -A8 'SESSION ISOLATION.*Defensive' "$ai_script" | grep -q 'unset ANTHROPIC_API_KEY'; then
-        pass "Defensive unset of ANTHROPIC_API_KEY before exec"
-    else
-        fail "Missing defensive ANTHROPIC_API_KEY unset before tool execution"
-    fi
-
-    # 3. Self-managed tool path cleans all Anthropic vars
-    if grep -A10 'TOOL_SELF_MANAGED.*true' "$ai_script" | grep -q 'unset ANTHROPIC_API_KEY ANTHROPIC_MODEL'; then
-        pass "Self-managed tool path cleans Anthropic vars"
-    else
-        fail "Self-managed tool path must clean all Anthropic vars"
-    fi
-
-    # 4. Pro provider unsets ANTHROPIC_API_KEY
+    # 1. Pro provider clears ANTHROPIC_API_KEY
+    # Each provider handles the key in its own setup_env — Pro clears it for subscription
     if grep -q 'unset ANTHROPIC_API_KEY' "$PROJECT_DIR/providers/pro.sh"; then
         pass "Pro provider unsets ANTHROPIC_API_KEY"
     else
         fail "Pro provider must unset ANTHROPIC_API_KEY"
     fi
 
-    # 5. No provider WRITES to ~/.claude/
-    local writes_to_claude=false
-    for f in "$PROJECT_DIR"/providers/*.sh; do
-        if grep -v '^#\|^[[:space:]]*#' "$f" | grep -qE '\.claude/.*>\|echo.*>.*\.claude'; then
-            writes_to_claude=true
-            fail "Provider $(basename "$f") writes to ~/.claude/"
+    # 2. All non-apikey providers clear ANTHROPIC_API_KEY
+    local all_clear=true
+    for p in aws vertex azure lmstudio; do
+        if ! grep -q 'unset ANTHROPIC_API_KEY' "$PROJECT_DIR/providers/$p.sh"; then
+            all_clear=false
+            fail "Provider $p.sh must unset ANTHROPIC_API_KEY"
         fi
     done
-    if [[ "$writes_to_claude" == false ]]; then
-        pass "No provider writes to ~/.claude/"
-    fi
+    [[ "$all_clear" == true ]] && pass "All non-apikey providers clear ANTHROPIC_API_KEY"
 
-    # 6. No tool WRITES to ~/.claude/ or ~/.codex/ (reads for install check are OK)
-    local writes_to_config=false
-    for f in "$PROJECT_DIR"/tools/*.sh; do
-        if grep -v '^#\|^[[:space:]]*#' "$f" | grep -qE '\.claude/.*>\|\.codex/.*>\|echo.*\.claude/\|echo.*\.codex/\|cat.*>.*\.claude\|cat.*>.*\.codex'; then
-            writes_to_config=true
-            fail "Tool $(basename "$f") writes to interpreter config dirs"
-        fi
-    done
-    if [[ "$writes_to_config" == false ]]; then
-        pass "No tool writes to interpreter config dirs"
-    fi
-
-    # 7. scripts/ai never writes to ~/.claude/ or ~/.codex/
-    if grep -v '^#\|session\|credentials\|cache' "$ai_script" | grep -q '\.claude/.*>\|\.codex/.*>'; then
-        fail "scripts/ai writes to interpreter config dirs"
-    else
-        pass "scripts/ai never writes to interpreter config dirs"
-    fi
-
-    # 8. Verify ANTHROPIC_API_KEY is in process isolation for BOTH scripts/ai and setup.sh
-    local setup_heredoc="$PROJECT_DIR/setup.sh"
-    if grep -A10 'Process isolation' "$setup_heredoc" | grep -q 'unset ANTHROPIC_API_KEY'; then
-        pass "setup.sh process isolation clears ANTHROPIC_API_KEY"
-    else
-        fail "setup.sh process isolation must unset ANTHROPIC_API_KEY"
-    fi
-
-    # 9. Defensive unset in setup.sh too
-    if grep -B2 -A8 'SESSION ISOLATION.*Defensive' "$setup_heredoc" | grep -q 'unset ANTHROPIC_API_KEY'; then
-        pass "setup.sh has defensive ANTHROPIC_API_KEY unset"
-    else
-        fail "setup.sh missing defensive ANTHROPIC_API_KEY unset"
-    fi
-
-    # 10. Non-apikey provider env var test
-    # Verify that after pro provider setup, ANTHROPIC_API_KEY is NOT set
+    # 3. Pro provider clears key at runtime
     local result
     result=$(ANTHROPIC_API_KEY="test-leak" bash -c '
         source "'"$PROJECT_DIR"'/providers/provider-base.sh" 2>/dev/null
@@ -1809,41 +1753,45 @@ test_session_isolation() {
         fail "Pro provider leaked ANTHROPIC_API_KEY: $result"
     fi
 
-    # 11. Passthrough mode saves system ANTHROPIC_API_KEY
-    if grep -q '_ORIG_API_KEY_WAS_SET=false' "$ai_script" && \
-       grep -q '_ORIG_API_KEY_WAS_SET=true' "$ai_script"; then
-        pass "Passthrough mode saves system ANTHROPIC_API_KEY"
+    # 4. No provider WRITES to ~/.claude/
+    local writes_to_claude=false
+    for f in "$PROJECT_DIR"/providers/*.sh; do
+        if grep -v '^#\|^[[:space:]]*#' "$f" | grep -qE '\.claude/.*>\|echo.*>.*\.claude'; then
+            writes_to_claude=true
+            fail "Provider $(basename "$f") writes to ~/.claude/"
+        fi
+    done
+    [[ "$writes_to_claude" == false ]] && pass "No provider writes to ~/.claude/"
+
+    # 5. No tool WRITES to ~/.claude/ or ~/.codex/
+    local writes_to_config=false
+    for f in "$PROJECT_DIR"/tools/*.sh; do
+        if grep -v '^#\|^[[:space:]]*#' "$f" | grep -qE '\.claude/.*>\|\.codex/.*>\|echo.*\.claude/\|echo.*\.codex/\|cat.*>.*\.claude\|cat.*>.*\.codex'; then
+            writes_to_config=true
+            fail "Tool $(basename "$f") writes to interpreter config dirs"
+        fi
+    done
+    [[ "$writes_to_config" == false ]] && pass "No tool writes to interpreter config dirs"
+
+    # 6. scripts/ai never writes to ~/.claude/ or ~/.codex/
+    if grep -v '^#\|session\|credentials\|cache' "$ai_script" | grep -q '\.claude/.*>\|\.codex/.*>'; then
+        fail "scripts/ai writes to interpreter config dirs"
     else
-        fail "Missing passthrough save of system ANTHROPIC_API_KEY"
+        pass "scripts/ai never writes to interpreter config dirs"
     fi
 
-    # 12. Passthrough mode restores key before exec
-    if grep -A5 '_PASSTHROUGH_MODE.*true' "$ai_script" | grep -q 'export ANTHROPIC_API_KEY=.*_ORIG_API_KEY'; then
-        pass "Passthrough mode restores system key"
+    # 7. Process isolation clears AI Runner vars (not ANTHROPIC_API_KEY — providers handle that)
+    if grep -A5 'Process isolation' "$ai_script" | grep -q 'unset.*ANTHROPIC_MODEL'; then
+        pass "Process isolation clears AI Runner vars"
     else
-        fail "Missing passthrough restore of ANTHROPIC_API_KEY"
+        fail "Process isolation must clear ANTHROPIC_MODEL"
     fi
 
-    # 13. Passthrough mode skips provider loading
-    if grep -q '_PASSTHROUGH_MODE.*!=.*true' "$ai_script"; then
-        pass "Provider loading guarded by passthrough check"
+    # 8. setup.sh mirrors process isolation
+    if grep -A5 'Process isolation' "$setup_heredoc" | grep -q 'unset.*ANTHROPIC_MODEL'; then
+        pass "setup.sh process isolation clears AI Runner vars"
     else
-        fail "Missing passthrough guard on provider loading"
-    fi
-
-    # 14. Model tier in passthrough uses universal Anthropic IDs
-    if grep -A8 '_PASSTHROUGH_MODE.*true' "$ai_script" | grep -q 'claude-opus-4-6'; then
-        pass "Passthrough model tier uses universal IDs"
-    else
-        fail "Missing universal model IDs in passthrough"
-    fi
-
-    # 15. setup.sh has passthrough mode
-    if grep -q '_PASSTHROUGH_MODE=false' "$setup_heredoc" && \
-       grep -q '_ORIG_API_KEY_WAS_SET' "$setup_heredoc"; then
-        pass "setup.sh has passthrough mode"
-    else
-        fail "setup.sh missing passthrough mode"
+        fail "setup.sh process isolation must clear ANTHROPIC_MODEL"
     fi
 }
 

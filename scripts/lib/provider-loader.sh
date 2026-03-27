@@ -119,7 +119,6 @@ detect_default_provider() {
     fi
 
     # 4. Anthropic API direct (--apikey)
-    # Only reached when a provider is explicitly needed (not passthrough mode)
     if load_provider "apikey" && provider_validate_config 2>/dev/null; then
         echo "apikey"
         return 0

@@ -22,9 +22,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Provider-gated warnings**: `--chrome` warns when used with non-direct-Anthropic providers (Ollama, Bedrock, etc.)
 - **Session isolation tests**: 10 new tests verify `ANTHROPIC_API_KEY` isolation invariants across providers and tool paths (204 tests total)
 
-### Changed
-- **Passthrough mode (default)**: `ai` with no flags now matches your system `claude` configuration. No provider is loaded — `claude` sees the same environment as if run directly. If `ANTHROPIC_API_KEY` is in your environment, `ai` uses it (matching native `claude -p`). Use `ai --pro` or `ai --pro --set-default` to force subscription.
-
 ### Fixed
 - **Self-managed tools clean Anthropic vars**: The Codex execution path explicitly unsets all Anthropic env vars (`ANTHROPIC_API_KEY`, `ANTHROPIC_MODEL`, `ANTHROPIC_BASE_URL`, etc.) before exec to prevent any leakage.
 - **Model tier defaults raised to high**: Default tier changed from `mid` (Sonnet/gpt-5.3-codex) to `high` (Opus/gpt-5.4) for API/cloud providers, matching Claude Code and Codex native defaults. AI Runner never forces a lower-tier model than the interpreter would choose on its own.
