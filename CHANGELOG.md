@@ -20,7 +20,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Codex browser auth**: Codex uses ChatGPT browser login by default (no API key required). Use `--apikey` to force API key auth for CI/CD
 - **Flag firewall**: Interpreter-specific flags gracefully degrade — scripts are portable across runtimes with warnings instead of errors
 - **Provider-gated warnings**: `--chrome` warns when used with non-direct-Anthropic providers (Ollama, Bedrock, etc.)
-- **Session isolation tests**: 10 new tests verify `ANTHROPIC_API_KEY` isolation invariants across providers and tool paths (204 tests total)
+- **Codex script execution framing**: Codex CLI now receives `developer_instructions` that reframe piped script content as a task to execute rather than code to implement. Works for all script types — agentic workflows, simple prompts, automation, and coding tasks.
+- **Session isolation tests**: 8 tests verify provider key handling and config isolation (202 tests total)
 
 ### Fixed
 - **Self-managed tools clean Anthropic vars**: The Codex execution path explicitly unsets all Anthropic env vars (`ANTHROPIC_API_KEY`, `ANTHROPIC_MODEL`, `ANTHROPIC_BASE_URL`, etc.) before exec to prevent any leakage.

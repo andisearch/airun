@@ -180,6 +180,10 @@ tool_execute_prompt() {
     codex_args+=("${_CODEX_FLAGS[@]}")
     _apply_effort_flag codex_args
 
+    # Script execution framing — Codex defaults to "build this" interpretation;
+    # AI Runner scripts need "do this" interpretation
+    codex_args+=("-c" 'developer_instructions=CRITICAL: The user prompt below is a RUNNABLE SCRIPT. You must execute it step by step — do NOT implement it as code, do NOT treat it as a feature request, and do NOT modify the script file itself. Read the instructions, run the bash blocks, use your tools as directed, and produce the requested output. You are the runtime, not the developer.')
+
     # Map passthrough args
     local mapped=()
     _remap_passthrough_args "${passthrough[@]}"
