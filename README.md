@@ -278,7 +278,7 @@ Variable overrides mix freely with AI Runner flags like `--live` and provider ov
 ai --aws --opus summarize-topic.md --topic "quantum computing"
 ```
 
-Override flags matching declared var names are consumed — `--live`, `--aws`, and other unrecognized flags still pass through. Only activates when front-matter contains `vars:` — no behavior change for existing scripts.
+Override flags matching declared var names are consumed — `--live`, `--aws`, and other unrecognized flags still pass through. Hyphens normalize to underscores (`--brief-only` matches `brief_only`). Only activates when front-matter contains `vars:` — no behavior change for existing scripts.
 
 ### Unix Pipe Support
 

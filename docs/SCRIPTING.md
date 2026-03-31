@@ -133,6 +133,7 @@ Override flags matching declared var names are consumed — they don't pass thro
 - **Opt-in**: Only activates when front-matter contains `vars:`. No `vars:` = no behavior change.
 - **`{{varname}}`**: Placeholders are replaced with the variable value. Doesn't collide with shell, markdown, or Claude syntax.
 - **Unset vars**: A var declared with no default (just `key:`) and no CLI override leaves `{{key}}` as-is in the prompt.
+- **Hyphen normalization**: Hyphens in flag names are normalized to underscores when matching variables. `--brief-only` matches `brief_only`, `--max-retries` matches `max_retries`. Both forms work interchangeably.
 - **Boolean flags**: `--varname` without a following value sets the variable to `"true"`. Useful for feature flags (e.g., declare `verbose: false`, then `./script.md --verbose` sets it to `"true"`).
 - **`--`-prefixed values**: If a value starts with `--`, use equals form: `--topic="--special"`. The space form (`--topic --special`) treats `--topic` as a boolean flag.
 - **Front-matter stripped**: The `---` block is removed from the prompt when `vars:` is present.

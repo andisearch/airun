@@ -5,6 +5,11 @@ All notable changes to AI Runner will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.5.1] - 2026-03-31
+
+### Fixed
+- **Hyphen normalization for script variables**: CLI flags now normalize hyphens to underscores when matching declared variable names. `--brief-only` matches `brief_only`, `--max-retries` matches `max_retries`. Follows standard CLI convention (Python argparse, Click, etc.).
+
 ## [2.5.0] - 2026-03-26
 
 ### Added

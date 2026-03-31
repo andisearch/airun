@@ -438,6 +438,7 @@ _parse_front_matter() {
     [[ "$found_vars" == true && $FRONT_MATTER_END -gt 0 ]] && return 0 || return 1
 }
 
+# Normalizes hyphens to underscores: --brief-only matches brief_only
 _apply_var_overrides() {
     local _cc_flags_file="$HOME/.ai-runner/.cc-flags"
     local -a new_args=()
@@ -450,21 +451,23 @@ _apply_var_overrides() {
             local key="${arg%%=*}"
             key="${key#--}"
             local val="${arg#*=}"
+            local norm_key="${key//-/_}"
             local j=0
             while [[ $j -lt ${#VAR_NAMES[@]} ]]; do
-                if [[ "${VAR_NAMES[$j]}" == "$key" ]]; then
+                if [[ "${VAR_NAMES[$j]//-/_}" == "$norm_key" ]]; then
                     VAR_VALUES[$j]="$val"
                     matched=true
-                    matched_key="$key"
+                    matched_key="${VAR_NAMES[$j]}"
                     break
                 fi
                 j=$((j + 1))
             done
         elif [[ "$arg" == --* ]]; then
             local key="${arg#--}"
+            local norm_key="${key//-/_}"
             local j=0
             while [[ $j -lt ${#VAR_NAMES[@]} ]]; do
-                if [[ "${VAR_NAMES[$j]}" == "$key" ]]; then
+                if [[ "${VAR_NAMES[$j]//-/_}" == "$norm_key" ]]; then
                     local next_i=$((i + 1))
                     if [[ $next_i -lt ${#CLAUDE_ARGS[@]} ]] && [[ ! "${CLAUDE_ARGS[$next_i]}" == --* ]]; then
                         i=$next_i
@@ -473,14 +476,14 @@ _apply_var_overrides() {
                         VAR_VALUES[$j]="true"
                     fi
                     matched=true
-                    matched_key="$key"
+                    matched_key="${VAR_NAMES[$j]}"
                     break
                 fi
                 j=$((j + 1))
             done
         fi
         if [[ "$matched" == true && -n "$matched_key" && -f "$_cc_flags_file" ]] \
-            && grep -qx "$matched_key" "$_cc_flags_file" 2>/dev/null; then
+            && grep -qx "${matched_key//-/_}" "$_cc_flags_file" 2>/dev/null; then
             echo "Warning: --$matched_key matches both script variable and Claude Code flag. Variable takes priority; rename to avoid conflict." >&2
         fi
         if [[ "$matched" == false ]]; then
@@ -695,6 +698,7 @@ Script variables:
   ---/vars:/---                  YAML front-matter declares variables with defaults
   {{varname}}                    Placeholder substituted with variable value
   --varname "value"              Override a declared variable from CLI
+                                 Hyphens normalize to underscores (--my-var matches my_var)
 
 Defaults:
   --set-default                Save current tool+provider+model as persistent default

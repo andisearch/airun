@@ -1637,6 +1637,79 @@ TESTSCRIPT
         pass "CC flag cache not available — conflict warning tests skipped (run setup.sh to enable)"
     fi
 
+    # --- Hyphen-to-underscore normalization tests ---
+
+    # Test: --brief-only matches brief_only (space form)
+    cat > "$test_dir/test-hyphen-space.sh" << 'TESTSCRIPT'
+#!/bin/bash
+source "$1"
+VAR_NAMES=(brief_only max_retries)
+VAR_VALUES=("false" "3")
+CLAUDE_ARGS=("--brief-only" "--max-retries" "10")
+_apply_var_overrides
+echo "BRIEF=${VAR_VALUES[0]}"
+echo "RETRIES=${VAR_VALUES[1]}"
+echo "ARGS=${CLAUDE_ARGS[*]}"
+TESTSCRIPT
+
+    output=$(bash "$test_dir/test-hyphen-space.sh" "$test_dir/funcs.sh" 2>&1)
+
+    if echo "$output" | grep -q "BRIEF=true"; then
+        pass "--brief-only matches brief_only (hyphen normalization, boolean)"
+    else
+        fail "--brief-only hyphen normalization failed: $output"
+    fi
+
+    if echo "$output" | grep -q "RETRIES=10"; then
+        pass "--max-retries matches max_retries (hyphen normalization, value)"
+    else
+        fail "--max-retries hyphen normalization failed: $output"
+    fi
+
+    if [[ "$(echo "$output" | grep "ARGS=")" == "ARGS=" ]]; then
+        pass "Hyphen-normalized flags consumed from CLAUDE_ARGS"
+    else
+        fail "Hyphen-normalized flags not consumed: $output"
+    fi
+
+    # Test: --key=value with hyphens
+    cat > "$test_dir/test-hyphen-equals.sh" << 'TESTSCRIPT'
+#!/bin/bash
+source "$1"
+VAR_NAMES=(output_dir)
+VAR_VALUES=("default")
+CLAUDE_ARGS=("--output-dir=/tmp/test")
+_apply_var_overrides
+echo "DIR=${VAR_VALUES[0]}"
+TESTSCRIPT
+
+    output=$(bash "$test_dir/test-hyphen-equals.sh" "$test_dir/funcs.sh" 2>&1)
+
+    if echo "$output" | grep -q "DIR=/tmp/test"; then
+        pass "--output-dir=value matches output_dir (equals form, hyphen normalization)"
+    else
+        fail "--output-dir=value hyphen normalization failed: $output"
+    fi
+
+    # Test: underscore form still works (backward compat)
+    cat > "$test_dir/test-underscore-compat.sh" << 'TESTSCRIPT'
+#!/bin/bash
+source "$1"
+VAR_NAMES=(brief_only)
+VAR_VALUES=("false")
+CLAUDE_ARGS=("--brief_only")
+_apply_var_overrides
+echo "BRIEF=${VAR_VALUES[0]}"
+TESTSCRIPT
+
+    output=$(bash "$test_dir/test-underscore-compat.sh" "$test_dir/funcs.sh" 2>&1)
+
+    if echo "$output" | grep -q "BRIEF=true"; then
+        pass "--brief_only still matches brief_only (underscore backward compat)"
+    else
+        fail "--brief_only backward compat failed: $output"
+    fi
+
     rm -rf "$test_dir"
 }
 
