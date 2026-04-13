@@ -44,6 +44,11 @@ if [ -f "$SCRIPT_DIR/lib/tool-loader.sh" ]; then
 elif [ -f "$SHARE_DIR/lib/tool-loader.sh" ]; then
     source "$SHARE_DIR/lib/tool-loader.sh"
 fi
+if [ -f "$SCRIPT_DIR/lib/local-provider-manager.sh" ]; then
+    source "$SCRIPT_DIR/lib/local-provider-manager.sh"
+elif [ -f "$SHARE_DIR/lib/local-provider-manager.sh" ]; then
+    source "$SHARE_DIR/lib/local-provider-manager.sh"
+fi
 
 # Load config quietly
 load_config_quiet 2>/dev/null || true
@@ -121,6 +126,29 @@ if curl -s --connect-timeout 1 http://localhost:1234/v1/models &>/dev/null; then
     echo "  LM Studio:   running (localhost:1234)"
 else
     echo "  LM Studio:   not running"
+fi
+
+# Generic local provider
+if local_provider_is_configured 2>/dev/null; then
+    local_provider_refresh_status 2>/dev/null || true
+    _lp_name="$(local_provider_name)"
+    _lp_base="$(local_provider_base_url)"
+    case "${_LOCAL_PROVIDER_VALIDATION_STATUS}" in
+        ready)
+            echo "  Local:       running (${_lp_name} @ ${_lp_base})"
+            ;;
+        no_messages_api|messages_probe_error)
+            echo "  Local:       configured (${_lp_name}, messages API not ready)"
+            ;;
+        no_models|invalid_models|auth_error)
+            echo "  Local:       configured (${_lp_name}, validation failed)"
+            ;;
+        *)
+            echo "  Local:       configured (${_lp_name}, not reachable)"
+            ;;
+    esac
+else
+    echo "  Local:       not configured (run: ai local-onboard)"
 fi
 
 # Claude Pro - cross-platform credential detection
@@ -202,5 +230,7 @@ fi
 echo "Quick Start:"
 echo "  ai task.md              # Execute with auto-detected provider"
 echo "  ai --ollama task.md     # Execute with local Ollama (free)"
+echo "  ai local-onboard        # Configure a generic local provider"
+echo "  ai --local task.md      # Execute with your configured local provider"
 echo "  ai --aws --opus         # Interactive with AWS Bedrock + Opus"
 echo ""

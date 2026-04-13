@@ -4,7 +4,7 @@ This guide covers detailed setup instructions for each AI provider supported by 
 
 ## How to Configure
 
-All provider credentials go in **one file**: `~/.ai-runner/secrets.sh`
+Cloud provider credentials go in `~/.ai-runner/secrets.sh`.
 
 This file is created automatically by `./setup.sh` from the `secrets.example.sh` template. Edit it to add your credentials:
 
@@ -12,7 +12,15 @@ This file is created automatically by `./setup.sh` from the `secrets.example.sh`
 nano ~/.ai-runner/secrets.sh
 ```
 
-AI Runner loads this file at startup. You don't need to set environment variables in your shell profile or `.bashrc` — just add them to secrets.sh, and then switch providers freely with `ai --aws`, `ai --vertex`, etc.
+AI Runner loads this file at startup. You don't need to set environment variables in your shell profile or `.bashrc` — just add them to `secrets.sh`, and then switch providers freely with `ai --aws`, `ai --vertex`, etc.
+
+Generic local Claude Code backends are configured separately with:
+
+```bash
+ai local-onboard
+```
+
+That onboarding flow writes `~/.ai-runner/local-provider.sh`.
 
 > **Tip:** You only need to configure the providers you want to use. Configure multiple providers to switch between them when you hit rate limits, or want to use different models.
 
@@ -24,6 +32,7 @@ AI Runner loads this file at startup. You don't need to set environment variable
 |------|----------|------|-------|
 | `--ollama` / `--ol` | Ollama | Local | Free, no API costs, cloud option |
 | `--lmstudio` / `--lm` | LM Studio | Local | MLX models (fast on Apple Silicon) |
+| `--local` | User-defined local provider | Local | Configure with `ai local-onboard` |
 | `--aws` | AWS Bedrock | Cloud | Requires AWS credentials |
 | `--vertex` | Google Vertex AI | Cloud | Requires GCP project |
 | `--apikey` | Anthropic API | Cloud | Direct API access |
@@ -223,6 +232,58 @@ ai --lm --model lmstudio-community/qwen3-8b-gguf
 ```
 
 See [LM Studio Claude Code guide](https://lmstudio.ai/blog/claudecode) for details.
+
+---
+
+### Custom Local Provider (`--local`)
+
+`ai --local` is a generic Claude Code backend slot for user-defined Anthropic-compatible local providers. Flow LLM is one example target, but the public AI Runner interface is not Flow-specific anymore.
+
+**Requirements:**
+- Your local backend is reachable
+- The configured models endpoint returns at least one model id
+- The configured Messages API endpoint accepts Anthropic Messages API requests
+
+#### Onboarding
+
+```bash
+ai local-onboard
+```
+
+The onboarding flow prompts for:
+- provider name
+- base URL
+- auth token
+- models endpoint
+- messages endpoint
+- default model
+
+It writes the result to `~/.ai-runner/local-provider.sh`.
+
+#### Usage
+
+```bash
+ai --local
+ai --local --model gemma-4-26B-A4B-it-UD-Q4_K_M
+```
+
+#### Flow Example
+
+If Flow is your local orchestrator, the onboarding defaults map cleanly to:
+
+- Base URL: `http://localhost:3377`
+- Models endpoint: `/v1/models`
+- Messages endpoint: `/v1/messages`
+- Auth token: `flow`
+
+After onboarding, Flow is used through the generic local-provider path:
+
+```bash
+ai --local
+ai --local --model gemma-4-26B-A4B-it-UD-Q4_K_M
+```
+
+> **Note:** `--local` is explicit-only in v1. Plain `ai` does not auto-detect a configured local provider unless you save `DEFAULT_PROVIDER="local"` or use `--set-default`.
 
 ---
 

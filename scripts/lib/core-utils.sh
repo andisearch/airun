@@ -34,6 +34,7 @@ SECRETS_FILE="${CONFIG_DIR}/secrets.sh"
 MODELS_FILE="${CONFIG_DIR}/models.sh"
 BANNER_FILE="${CONFIG_DIR}/banner.sh"
 SESSIONS_DIR="${CONFIG_DIR}/sessions"
+LOCAL_PROVIDER_FILE="${CONFIG_DIR}/local-provider.sh"
 
 # Version Detection
 _detect_version() {
@@ -110,6 +111,11 @@ load_config() {
         source "$SECRETS_FILE"
         print_status "Loaded secrets from $SECRETS_FILE"
     fi
+
+    if [ -f "$LOCAL_PROVIDER_FILE" ]; then
+        source "$LOCAL_PROVIDER_FILE"
+        print_status "Loaded local provider config from $LOCAL_PROVIDER_FILE"
+    fi
 }
 
 # Load config silently (no output)
@@ -119,6 +125,9 @@ load_config_quiet() {
     fi
     if [ -f "$SECRETS_FILE" ]; then
         source "$SECRETS_FILE"
+    fi
+    if [ -f "$LOCAL_PROVIDER_FILE" ]; then
+        source "$LOCAL_PROVIDER_FILE"
     fi
 }
 
@@ -377,6 +386,7 @@ migrate_config_interactive() {
     MODELS_FILE="${CONFIG_DIR}/models.sh"
     BANNER_FILE="${CONFIG_DIR}/banner.sh"
     SESSIONS_DIR="${CONFIG_DIR}/sessions"
+    LOCAL_PROVIDER_FILE="${CONFIG_DIR}/local-provider.sh"
 }
 
 # Common cleanup/restore function (can be extended by scripts)
@@ -405,6 +415,9 @@ needs_first_time_setup() {
             return 1
         fi
     fi
+
+    # Skip if a generic local provider has already been onboarded
+    [ -f "$LOCAL_PROVIDER_FILE" ] && return 1
 
     # Setup needed for fresh installs
     return 0

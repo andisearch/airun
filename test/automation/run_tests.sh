@@ -222,7 +222,7 @@ test_backward_compat() {
 test_provider_flags() {
     test_header "Provider flag parsing"
 
-    local flags=("aws" "vertex" "apikey" "azure" "vercel" "pro" "ollama" "lmstudio")
+    local flags=("aws" "vertex" "apikey" "azure" "vercel" "pro" "ollama" "lmstudio" "local")
 
     for flag in "${flags[@]}"; do
         if grep -q -- "--$flag" "$PROJECT_DIR/scripts/ai"; then
@@ -256,7 +256,7 @@ test_model_flags() {
 test_provider_modules() {
     test_header "Provider modules exist"
 
-    local providers=("aws.sh" "vertex.sh" "ollama.sh" "apikey.sh" "azure.sh" "vercel.sh" "pro.sh" "lmstudio.sh")
+    local providers=("aws.sh" "vertex.sh" "ollama.sh" "apikey.sh" "azure.sh" "vercel.sh" "pro.sh" "lmstudio.sh" "local.sh")
 
     for provider in "${providers[@]}"; do
         if [[ -x "$PROJECT_DIR/providers/$provider" ]]; then
@@ -271,6 +271,61 @@ test_provider_modules() {
         pass "Provider base module exists"
     else
         fail "Provider base module missing"
+    fi
+}
+
+#=============================================================================
+# TEST 12b: Generic local provider static wiring
+#=============================================================================
+test_local_provider_static() {
+    test_header "Generic local provider static wiring"
+
+    if grep -q 'local.sh' "$PROJECT_DIR/scripts/lib/provider-loader.sh"; then
+        pass "Provider loader knows local.sh"
+    else
+        fail "Provider loader missing local.sh"
+    fi
+
+    if grep -q 'local' "$PROJECT_DIR/tools/claude-code.sh"; then
+        pass "Claude Code provider list includes local"
+    else
+        fail "Claude Code provider list missing local"
+    fi
+
+    if grep -q -- '--local' "$PROJECT_DIR/scripts/ai" && grep -q 'local-onboard' "$PROJECT_DIR/scripts/ai"; then
+        pass "Help text and parser mention --local and local-onboard"
+    else
+        fail "scripts/ai missing local provider commands"
+    fi
+
+    if [[ -f "$PROJECT_DIR/scripts/lib/local-provider-manager.sh" ]]; then
+        pass "local-provider-manager.sh exists"
+    else
+        fail "local-provider-manager.sh missing"
+    fi
+
+    if grep -q 'ai --local' "$PROJECT_DIR/README.md" && grep -q 'ai local-onboard' "$PROJECT_DIR/README.md"; then
+        pass "README documents generic local provider"
+    else
+        fail "README missing generic local provider documentation"
+    fi
+
+    if grep -q 'ai --local' "$PROJECT_DIR/docs/PROVIDERS.md" && grep -q 'ai local-onboard' "$PROJECT_DIR/docs/PROVIDERS.md"; then
+        pass "Provider docs document generic local provider"
+    else
+        fail "Provider docs missing generic local provider documentation"
+    fi
+
+    if grep -q 'ai local-onboard' "$PROJECT_DIR/scripts/ai-status" && grep -q 'Local:' "$PROJECT_DIR/scripts/ai-status"; then
+        pass "ai-status includes local provider checks"
+    else
+        fail "ai-status missing local provider checks"
+    fi
+
+    if grep -q -- '--local' "$PROJECT_DIR/setup.sh" && grep -q 'local-onboard' "$PROJECT_DIR/setup.sh"; then
+        pass "setup.sh wrapper mirrors local provider support"
+    else
+        fail "setup.sh missing local provider wrapper support"
     fi
 }
 
@@ -719,13 +774,13 @@ test_permission_shortcut_shebang() {
     local ai_script="$PROJECT_DIR/scripts/ai"
 
     # Check --skip and --bypass handled in _parse_shebang_flags
-    if grep -A50 '_parse_shebang_flags()' "$ai_script" | grep -q -- '--skip)'; then
+    if grep -A80 '_parse_shebang_flags()' "$ai_script" | grep -q -- '--skip)'; then
         pass "--skip handled in shebang flag parser"
     else
         fail "--skip not found in shebang flag parser"
     fi
 
-    if grep -A50 '_parse_shebang_flags()' "$ai_script" | grep -q -- '--bypass)'; then
+    if grep -A80 '_parse_shebang_flags()' "$ai_script" | grep -q -- '--bypass)'; then
         pass "--bypass handled in shebang flag parser"
     else
         fail "--bypass not found in shebang flag parser"
@@ -855,8 +910,8 @@ test_shebang_flag_parsing() {
     done
 
     # Check local provider aliases
-    for flag in ollama lmstudio ol lm; do
-        if grep -A50 '_parse_shebang_flags()' "$ai_script" | grep -q -- "--$flag"; then
+    for flag in ollama lmstudio local ol lm; do
+        if grep -A80 '_parse_shebang_flags()' "$ai_script" | grep -q -- "--$flag"; then
             pass "Shebang parser handles --$flag"
         else
             fail "Shebang parser missing --$flag"
@@ -865,7 +920,7 @@ test_shebang_flag_parsing() {
 
     # Check model tier flags
     for flag in opus sonnet haiku high mid low; do
-        if grep -A50 '_parse_shebang_flags()' "$ai_script" | grep -q -- "--$flag"; then
+        if grep -A80 '_parse_shebang_flags()' "$ai_script" | grep -q -- "--$flag"; then
             pass "Shebang parser handles --$flag"
         else
             fail "Shebang parser missing --$flag"
@@ -873,19 +928,19 @@ test_shebang_flag_parsing() {
     done
 
     # Check --live and --skip/--bypass
-    if grep -A50 '_parse_shebang_flags()' "$ai_script" | grep -q -- "--live"; then
+    if grep -A80 '_parse_shebang_flags()' "$ai_script" | grep -q -- "--live"; then
         pass "Shebang parser handles --live"
     else
         fail "Shebang parser missing --live"
     fi
 
-    if grep -A50 '_parse_shebang_flags()' "$ai_script" | grep -q -- "--skip"; then
+    if grep -A80 '_parse_shebang_flags()' "$ai_script" | grep -q -- "--skip"; then
         pass "Shebang parser handles --skip"
     else
         fail "Shebang parser missing --skip"
     fi
 
-    if grep -A50 '_parse_shebang_flags()' "$ai_script" | grep -q -- "--bypass"; then
+    if grep -A80 '_parse_shebang_flags()' "$ai_script" | grep -q -- "--bypass"; then
         pass "Shebang parser handles --bypass"
     else
         fail "Shebang parser missing --bypass"
@@ -1886,6 +1941,7 @@ main() {
     test_provider_flags
     test_model_flags
     test_provider_modules
+    test_local_provider_static
     test_tool_modules
     test_utility_commands
     test_default_flags
