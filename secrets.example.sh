@@ -180,6 +180,20 @@
 # export LMSTUDIO_MODEL_LOW="ibm/granite-4-micro"
 
 # ============================================================================
+# Custom Local Provider Configuration
+# ============================================================================
+# Use this for Anthropic-compatible local Claude Code backends such as Flow.
+#
+# Configure it interactively:
+#   ai local-onboard
+#
+# AI Runner writes the result to:
+#   ~/.ai-runner/local-provider.sh
+#
+# This is separate from secrets.sh because the local provider includes
+# endpoint discovery and a locked default model, not just credentials.
+
+# ============================================================================
 # OpenRouter Configuration
 # ============================================================================
 # OpenRouter provides access to 500+ models with a single API key.
@@ -221,7 +235,7 @@
 # ============================================================================
 
 # Default provider (used when no provider flag specified)
-# Options: ollama, pro, apikey, aws, vertex, azure, vercel, lmstudio
+# Options: ollama, pro, apikey, aws, vertex, azure, vercel, lmstudio, local
 # export DEFAULT_PROVIDER="ollama"
 
 # Tip: You can also save defaults interactively:

@@ -7,6 +7,8 @@ Run AI prompts like programs. Executable markdown with shebang, Unix pipes, and 
 ai                                        # Regular Claude subscription (Pro, Max)
 ai --aws --opus --team --resume           # Resume chats on AWS w/ Opus 4.7 + Agent Teams
 ai --ollama --bypass --model qwen3-coder  # Ollama local model with bypassPermissions set
+ai local-onboard                          # One-time setup for Flow or another local gateway
+ai --local --model gemma-4-26B-A4B-it-UD-Q4_K_M # Configured local provider
 
 # Codex CLI: OpenAI's coding agent
 ai --codex                                # Codex with gpt-5.4 (default)
@@ -21,7 +23,7 @@ ai --codex script.md
 cat data.json | ./analyze.md > results.txt
 ```
 
-Choose your runtime — [Claude Code](https://claude.ai/code) or [Codex CLI](https://developers.openai.com/codex/cli) — and switch between clouds + models: AWS Bedrock, Google Vertex, Azure, Vercel, Anthropic API, OpenAI API. Supports free local models ([Ollama](https://ollama.com/), [LM Studio](https://lmstudio.ai/)) and 100+ alternate cloud models via [Vercel AI Gateway](https://vercel.com/ai-gateway) or Ollama Cloud. Swap and resume conversations mid-task to avoid rate limits and keep working.
+Choose your runtime — [Claude Code](https://claude.ai/code) or [Codex CLI](https://developers.openai.com/codex/cli) — and switch between clouds + models: AWS Bedrock, Google Vertex, Azure, Vercel, Anthropic API, OpenAI API. Supports free local models ([Ollama](https://ollama.com/), [LM Studio](https://lmstudio.ai/)) plus custom local gateways like Flow LLM via `ai local-onboard`, and 100+ alternate cloud models via [Vercel AI Gateway](https://vercel.com/ai-gateway) or Ollama Cloud. Swap and resume conversations mid-task to avoid rate limits and keep working.
 
 [![GitHub Stars](https://img.shields.io/github/stars/andisearch/airun?style=for-the-badge&logo=github)](https://github.com/andisearch/airun/stargazers)
 [![Buy Me a Coffee](https://img.shields.io/badge/Buy_Me_A_Coffee-Support-yellow?logo=buy-me-a-coffee&style=for-the-badge)](https://buymeacoffee.com/andisearch)
@@ -40,7 +42,7 @@ Choose your runtime — [Claude Code](https://claude.ai/code) or [Codex CLI](htt
 
 From [Andi AI Search](https://andisearch.com). [Star this repo](https://github.com/andisearch/airun) if it helps!
 
-**Latest:** **Opus 4.7** default across all providers. Codex CLI support (`--codex`), cross-interpreter effort levels (`--effort`), tool profiles (`--profile`). Script variables, live streaming, Agent Teams, local models (Ollama, LM Studio), persistent defaults, 100+ cloud models via Vercel. See [CHANGELOG.md](CHANGELOG.md).
+**Latest:** **Opus 4.7** default across all providers. Codex CLI support (`--codex`), cross-interpreter effort levels (`--effort`), tool profiles (`--profile`). Script variables, live streaming, Agent Teams, local models (Ollama, LM Studio, custom local backends), persistent defaults, 100+ cloud models via Vercel. See [CHANGELOG.md](CHANGELOG.md).
 
 ## Quick Start
 
@@ -365,6 +367,7 @@ Claude Code is the default runtime when both are installed. If only Codex is ins
 |------|----------|-------------|-----------|------|
 | `--ollama` / `--ol` | Ollama | Yes | Yes | Local |
 | `--lmstudio` / `--lm` | LM Studio | Yes | Yes | Local |
+| `--local` | User-defined local provider | Yes | — | Local |
 | `--aws` | AWS Bedrock | Yes | — | Cloud |
 | `--vertex` | Google Vertex AI | Yes | — | Cloud |
 | `--apikey` | Anthropic / OpenAI API | Yes | Yes | Cloud |
@@ -381,6 +384,8 @@ Codex custom providers (OpenRouter, Mistral, DeepSeek, etc.) are configured in `
 # Local providers (free, no API costs — work with both runtimes)
 ai --ollama                    # Claude Code + Ollama
 ai --codex --ollama            # Codex CLI + Ollama
+ai local-onboard               # Configure Flow or another local Claude Code backend
+ai --local --model gemma-4-26B-A4B-it-UD-Q4_K_M
 
 # Claude Code cloud providers
 ai --aws --opus task.md        # AWS Bedrock + Opus 4.7
@@ -425,11 +430,24 @@ ai --ollama --model minimax-m2.5:cloud
 ai --lm                               # Run with LM Studio
 ```
 
+**Custom local provider** — configure any Anthropic-compatible local backend for Claude Code. Flow LLM is one example:
+
+```bash
+# One-time onboarding (writes ~/.ai-runner/local-provider.sh)
+ai local-onboard
+
+# Then use it like any other Claude Code provider
+ai --local
+ai --local --model gemma-4-26B-A4B-it-UD-Q4_K_M
+```
+
+During onboarding you set the base URL, auth token, and default model. The current target backend can be Flow at `http://localhost:3377`, but the public AI Runner surface stays generic.
+
 See **[docs/PROVIDERS.md](docs/PROVIDERS.md)** for model recommendations, configuration, and auto-download features.
 
 #### Cloud Providers
 
-Add your credentials to `~/.ai-runner/secrets.sh` (created by `./setup.sh`). Andi AIRun loads this file automatically, so you don't need to set environment variables in your shell profile.
+Add your cloud credentials to `~/.ai-runner/secrets.sh` (created by `./setup.sh`). Andi AIRun loads this file automatically, so you don't need to set environment variables in your shell profile. Generic local providers are configured separately with `ai local-onboard`.
 
 ```bash
 nano ~/.ai-runner/secrets.sh
