@@ -110,7 +110,7 @@ provider_get_model_id() {
 
     # Azure model names are deployment names (user-defined)
     case "$tier" in
-        high) echo "${CLAUDE_MODEL_OPUS_AZURE:-claude-opus-4-6}" ;;
+        high) echo "${CLAUDE_MODEL_OPUS_AZURE:-claude-opus-4-7}" ;;
         mid)  echo "${CLAUDE_MODEL_SONNET_AZURE:-claude-sonnet-4-6}" ;;
         low)  echo "${CLAUDE_MODEL_HAIKU_AZURE:-claude-haiku-4-5}" ;;
         *)    echo "${CLAUDE_MODEL_SONNET_AZURE:-claude-sonnet-4-6}" ;;

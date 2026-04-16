@@ -5,6 +5,18 @@ All notable changes to AI Runner will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.5.2] - 2026-04-16
+
+### Changed
+- **Default Opus model bumped to 4.7** across all providers following Anthropic's release on 2026-04-16.
+  - Anthropic API: `claude-opus-4-7`
+  - AWS Bedrock: `global.anthropic.claude-opus-4-7` (note: `-v1` suffix dropped compared to 4.6)
+  - Vertex AI: `claude-opus-4-7`
+  - Azure Foundry: `claude-opus-4-7` (default deployment name)
+  - Vercel AI Gateway: `anthropic/claude-opus-4.7`
+  - OpenRouter: `anthropic/claude-opus-4.7`
+- Vertex region override loop now includes `VERTEX_REGION_CLAUDE_4_7_OPUS` (existing `_4_6_OPUS` override kept for backward compatibility).
+
 ## [2.5.1] - 2026-03-31
 
 ### Fixed

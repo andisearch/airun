@@ -97,7 +97,7 @@ provider_setup_env() {
                VERTEX_REGION_CLAUDE_3_7_SONNET VERTEX_REGION_CLAUDE_4_0_OPUS \
                VERTEX_REGION_CLAUDE_4_0_SONNET VERTEX_REGION_CLAUDE_4_1_OPUS \
                VERTEX_REGION_CLAUDE_4_5_SONNET VERTEX_REGION_CLAUDE_4_5_OPUS \
-               VERTEX_REGION_CLAUDE_4_6_OPUS; do
+               VERTEX_REGION_CLAUDE_4_6_OPUS VERTEX_REGION_CLAUDE_4_7_OPUS; do
         if [ -n "${!var}" ]; then
             export $var
         fi
@@ -127,7 +127,7 @@ provider_get_model_id() {
     local tier=$(_normalize_tier "$1")
 
     case "$tier" in
-        high) echo "${CLAUDE_MODEL_OPUS_VERTEX:-claude-opus-4-6}" ;;
+        high) echo "${CLAUDE_MODEL_OPUS_VERTEX:-claude-opus-4-7}" ;;
         mid)  echo "${CLAUDE_MODEL_SONNET_VERTEX:-claude-sonnet-4-6}" ;;
         low)  echo "${CLAUDE_MODEL_HAIKU_VERTEX:-claude-haiku-4-5@20251001}" ;;
         *)    echo "${CLAUDE_MODEL_SONNET_VERTEX:-claude-sonnet-4-6}" ;;
