@@ -5,6 +5,11 @@ All notable changes to AI Runner will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.5.3] - 2026-04-26
+
+### Fixed
+- **Claude Pro/Max provider now honors `CLAUDE_MODEL_*_ANTHROPIC` overrides** from `secrets.sh`. Previously, `providers/pro.sh` had hardcoded model IDs and ignored secrets.sh, meaning `--pro --opus` couldn't be pinned to a specific Opus version. Now consistent with `--apikey` (same Anthropic-API model namespace). Useful workaround for the Claude Code 2.1.111 beta-flag bug on Bedrock — pin `CLAUDE_MODEL_OPUS_ANTHROPIC=claude-opus-4-6` to keep Opus 4.6 across both `--pro` and `--apikey`.
+
 ## [2.5.2] - 2026-04-16
 
 ### Changed
