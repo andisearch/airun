@@ -5,6 +5,11 @@ All notable changes to AI Runner will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.5.4] - 2026-04-28
+
+### Docs
+- Reframed the Opus pinning recipe in README and `advanced/configuration` as a neutral user-choice guide. The previous AWS "invalid beta flag" framing was likely transient and not the right headline. Reasons users may want to pin to an older Opus include personal preference, transient provider-side bugs, or known regressions in their workload (e.g. long-context recall on very large codebases). Defaults still ship as the current Opus.
+
 ## [2.5.3] - 2026-04-26
 
 ### Fixed

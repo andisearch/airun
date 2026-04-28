@@ -608,9 +608,9 @@ ai-status                              # Shows authentication and configuration
 1. Use `ai --pro` or plain `claude`
 2. Run `/status` in Claude to verify authentication
 
-**Hitting Opus 4.7 regressions (e.g. AWS "invalid beta flag")?**
+**Want to pin to a specific Opus version (e.g. 4.6)?**
 
-A Claude Code 2.1.111+ bug ([#30926](https://github.com/anthropics/claude-code/issues/30926)) sends an `anthropic_beta` array on Bedrock requests that Opus 4.7 rejects. Pin to Opus 4.6 in `~/.ai-runner/secrets.sh`:
+Whether you prefer an older release for personal-preference reasons, hit a transient provider bug with the latest one, or want to avoid a known regression in your workload, you can pin Opus across all providers in `~/.ai-runner/secrets.sh`:
 
 ```bash
 export CLAUDE_MODEL_OPUS_AWS="global.anthropic.claude-opus-4-6-v1"
@@ -623,7 +623,7 @@ export CLAUDE_MODEL_OPUS_VERCEL="anthropic/claude-opus-4.6"
 export ANTHROPIC_DEFAULT_OPUS_MODEL="claude-opus-4-6"
 ```
 
-See [Pinning Opus to 4.6](https://docs.airun.me/advanced/configuration#pinning-opus-to-4-6-workaround-for-4-7-regressions) for the full explanation.
+See [Pinning Opus to a specific version](https://docs.airun.me/advanced/configuration#pinning-opus-to-a-specific-version) for the full explanation.
 
 ### Session-Scoped Behavior
 
