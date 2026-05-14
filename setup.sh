@@ -991,7 +991,7 @@ fi
 # Warn about provider-gated passthrough flags
 if [[ " ${CLAUDE_ARGS[*]} " == *" --chrome "* ]]; then
     case "$PROVIDER_FLAG" in
-        ollama|lmstudio|local|aws|vertex|azure|vercel)
+        ollama|lmstudio|local|dgx|aws|vertex|azure|vercel)
             print_warning "--chrome requires a direct Anthropic plan (Pro/Max). May not work with --$PROVIDER_FLAG" ;;
     esac
 fi

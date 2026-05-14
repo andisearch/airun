@@ -786,7 +786,7 @@ else
         # Validate provider configuration
         _PROVIDER_FAILED=false
         if ! provider_validate_config; then
-            if [[ "$PROVIDER_FLAG" == "lmstudio" || "$PROVIDER_FLAG" == "ollama" || "$PROVIDER_FLAG" == "local" ]]; then
+            if [[ "$PROVIDER_FLAG" == "lmstudio" || "$PROVIDER_FLAG" == "ollama" || "$PROVIDER_FLAG" == "local" || "$PROVIDER_FLAG" == "dgx" ]]; then
                 provider_get_validation_error >&2
                 _PROVIDER_FAILED=true
             else
@@ -812,7 +812,7 @@ else
 
             # Setup provider environment
             if ! provider_setup_env "$MODEL_TIER" "$CUSTOM_MODEL"; then
-                if [[ "$PROVIDER_FLAG" == "lmstudio" || "$PROVIDER_FLAG" == "ollama" || "$PROVIDER_FLAG" == "local" ]]; then
+                if [[ "$PROVIDER_FLAG" == "lmstudio" || "$PROVIDER_FLAG" == "ollama" || "$PROVIDER_FLAG" == "local" || "$PROVIDER_FLAG" == "dgx" ]]; then
                     _PROVIDER_FAILED=true
                 else
                     exit 1
@@ -824,6 +824,9 @@ else
     #=========================================================================
     if [[ "$_PROVIDER_FAILED" == true ]]; then
         if [[ "$PROVIDER_FLAG" == "local" && "$CLI_PROVIDER_FLAG" == "local" ]]; then
+            exit 1
+        fi
+        if [[ "$PROVIDER_FLAG" == "dgx" && "$CLI_PROVIDER_FLAG" == "dgx" ]]; then
             exit 1
         fi
         echo "" >&2
@@ -925,7 +928,7 @@ fi
 # Warn about provider-gated passthrough flags
 if [[ " ${CLAUDE_ARGS[*]} " == *" --chrome "* ]]; then
     case "$PROVIDER_FLAG" in
-        ollama|lmstudio|local|aws|vertex|azure|vercel)
+        ollama|lmstudio|local|dgx|aws|vertex|azure|vercel)
             print_warning "--chrome requires a direct Anthropic plan (Pro/Max). May not work with --$PROVIDER_FLAG" ;;
     esac
 fi
