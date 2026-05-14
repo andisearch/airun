@@ -222,7 +222,7 @@ test_backward_compat() {
 test_provider_flags() {
     test_header "Provider flag parsing"
 
-    local flags=("aws" "vertex" "apikey" "azure" "vercel" "pro" "ollama" "lmstudio" "local")
+    local flags=("aws" "vertex" "apikey" "azure" "vercel" "pro" "ollama" "lmstudio" "local" "dgx")
 
     for flag in "${flags[@]}"; do
         if grep -q -- "--$flag" "$PROJECT_DIR/scripts/ai"; then
@@ -256,7 +256,7 @@ test_model_flags() {
 test_provider_modules() {
     test_header "Provider modules exist"
 
-    local providers=("aws.sh" "vertex.sh" "ollama.sh" "apikey.sh" "azure.sh" "vercel.sh" "pro.sh" "lmstudio.sh" "local.sh")
+    local providers=("aws.sh" "vertex.sh" "ollama.sh" "apikey.sh" "azure.sh" "vercel.sh" "pro.sh" "lmstudio.sh" "local.sh" "dgx.sh")
 
     for provider in "${providers[@]}"; do
         if [[ -x "$PROJECT_DIR/providers/$provider" ]]; then
