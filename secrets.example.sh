@@ -180,6 +180,37 @@
 # export LMSTUDIO_MODEL_LOW="ibm/granite-4-micro"
 
 # ============================================================================
+# Custom Local Provider Configuration
+# ============================================================================
+# Use this for Anthropic-compatible local Claude Code backends such as Flow.
+#
+# Configure it interactively:
+#   ai local-onboard
+#
+# AI Runner writes the result to:
+#   ~/.ai-runner/local-provider.sh
+#
+# This is separate from secrets.sh because the local provider includes
+# endpoint discovery and a locked default model, not just credentials.
+
+# ============================================================================
+# DGX Spark Configuration (Remote Ollama Over VPN)
+# ============================================================================
+# DGX Spark is a remote Ollama instance accessible over VPN.
+# Uses Ollama's Anthropic Messages API compatibility.
+# See: https://docs.ollama.com/integrations/claude-code
+
+# DGX Spark server URL (default: http://DGXSPARK-A:11434)
+# export DGX_HOST="http://DGXSPARK-A:11434"
+
+# DGX Spark Model Tier Mappings
+# Override the default models used for each tier (--high, --mid, --low)
+# export DGX_MODEL_HIGH="qwen3:72b"           # For --opus/--high
+# export DGX_MODEL_MID="qwen3-coder:32b"      # For --sonnet/--mid
+# export DGX_MODEL_LOW="qwen3:8b"             # For --haiku/--low
+# export DGX_SMALL_FAST_MODEL="qwen3:8b"      # For background operations
+
+# ============================================================================
 # OpenRouter Configuration
 # ============================================================================
 # OpenRouter provides access to 500+ models with a single API key.
@@ -221,7 +252,7 @@
 # ============================================================================
 
 # Default provider (used when no provider flag specified)
-# Options: ollama, pro, apikey, aws, vertex, azure, vercel, lmstudio
+# Options: ollama, pro, apikey, aws, vertex, azure, vercel, lmstudio, local
 # export DEFAULT_PROVIDER="ollama"
 
 # Tip: You can also save defaults interactively:

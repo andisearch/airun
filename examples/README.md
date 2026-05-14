@@ -29,6 +29,8 @@ cat live-report.md | ai
 
 # Override provider or model (CLI flags override shebang)
 ai --aws --opus run-tests.md
+ai local-onboard
+ai --local --model gemma-4-26B-A4B-it-UD-Q4_K_M analyze-code.md
 
 # Pipe data into a script
 cat package.json | ./analyze-stdin.md
@@ -77,6 +79,7 @@ Variable overrides (`--topic`, `--style`, `--length`) are consumed by AI Runner.
 - **Stdin piping** = pipe data in with `cat file | ./script.md`
 - **Variables** = declare `vars:` in YAML front-matter, override with `--varname "value"` or `--varname` (boolean) from CLI
 - **CLI overrides shebang** = `ai --aws script.md` overrides the script's shebang provider
+- **Custom local provider** = `ai local-onboard`, then `ai --local --model <id>` routes Claude Code through your configured backend (for example Flow)
 - **Shebang overrides defaults** = shebang flags beat `--set-default` preferences
 
 See [docs/SCRIPTING.md](../docs/SCRIPTING.md) for the full guide.
