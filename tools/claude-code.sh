@@ -24,7 +24,7 @@ tool_is_installed() {
 
 tool_supported_providers() {
     # Claude Code supports all providers
-    echo "aws vertex apikey azure vercel pro ollama lmstudio local"
+    echo "aws vertex apikey azure vercel pro ollama lmstudio local dgx"
 }
 
 tool_setup_env() {

@@ -162,12 +162,12 @@ provider_model_available() {
     local dgx_url="${DGX_HOST:-http://DGXSPARK-A:11434}"
     local model_name="${model%%:*}"
 
-    curl -s "${dgx_url}/api/tags" 2>/dev/null | grep -q "\"name\":\"${model_name}\""
+    curl -s --connect-timeout 5 "${dgx_url}/api/tags" 2>/dev/null | grep -qE "\"name\":\"${model_name}(\"|:)"
 }
 
 provider_list_models() {
     local dgx_url="${DGX_HOST:-http://DGXSPARK-A:11434}"
-    curl -s "${dgx_url}/api/tags" 2>/dev/null | \
+    curl -s --connect-timeout 5 "${dgx_url}/api/tags" 2>/dev/null | \
         grep -o '"name":"[^"]*"' | \
         cut -d'"' -f4
 }
@@ -181,7 +181,7 @@ _dgx_download_model() {
     local dgx_url="${DGX_HOST:-http://DGXSPARK-A:11434}"
 
     echo "Pulling model: $model"
-    curl -s -X POST "${dgx_url}/api/pull" \
+    curl -s --connect-timeout 5 -X POST "${dgx_url}/api/pull" \
         -H "Content-Type: application/json" \
         -d "{\"name\": \"$model\", \"stream\": false}" 2>&1
     echo ""
