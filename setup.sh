@@ -376,6 +376,7 @@ _parse_shebang_flags() {
             --ollama|--ol) SHEBANG_PROVIDER="ollama" ;;
             --lmstudio|--lm) SHEBANG_PROVIDER="lmstudio" ;;
             --local) SHEBANG_PROVIDER="local" ;;
+            --dgx) SHEBANG_PROVIDER="dgx" ;;
             --opus|--high) SHEBANG_MODEL_TIER="high" ;;
             --sonnet|--mid) SHEBANG_MODEL_TIER="mid" ;;
             --haiku|--low) SHEBANG_MODEL_TIER="low" ;;
@@ -560,6 +561,7 @@ while [[ $# -gt 0 ]]; do
         --ollama|--ol) PROVIDER_FLAG="ollama"; shift ;;
         --lmstudio|--lm) PROVIDER_FLAG="lmstudio"; shift ;;
         --local) PROVIDER_FLAG="local"; shift ;;
+        --dgx) PROVIDER_FLAG="dgx"; shift ;;
         --team|--teams) TEAM_MODE="enabled"; shift ;;
         --teammate-mode) TEAMMATE_MODE="$2"; CLAUDE_ARGS+=("$1" "$2"); shift 2 ;;
         --teammate-mode=*) TEAMMATE_MODE="${1#*=}"; CLAUDE_ARGS+=("$1"); shift ;;
@@ -669,6 +671,7 @@ Provider flags (pick one):
   --ollama, --ol               Local Ollama (free, Anthropic-API-compatible)
   --lmstudio, --lm             Local LM Studio (MLX support)
   --local                      User-defined local provider (Anthropic-compatible)
+  --dgx                        DGX Spark remote Ollama (VPN, Anthropic-compatible)
 
 Model flags (pick one):
   --opus, --high               Highest-tier model (default)
@@ -749,6 +752,10 @@ Examples:
   # Configure and use a generic local provider
   ai local-onboard
   ai --local task.md
+
+  # Use DGX Spark remote Ollama over VPN
+  ai --dgx task.md
+  ai --dgx --opus task.md
 
   # Run with AWS Bedrock using the strongest model
   ai --aws --opus task.md
@@ -882,7 +889,7 @@ else
     # Validate and setup provider (with fallback for local providers)
     _PROVIDER_FAILED=false
     if ! provider_validate_config; then
-        if [[ "$PROVIDER_FLAG" == "lmstudio" || "$PROVIDER_FLAG" == "ollama" || "$PROVIDER_FLAG" == "local" ]]; then
+        if [[ "$PROVIDER_FLAG" == "lmstudio" || "$PROVIDER_FLAG" == "ollama" || "$PROVIDER_FLAG" == "local" || "$PROVIDER_FLAG" == "dgx" ]]; then
             provider_get_validation_error >&2; _PROVIDER_FAILED=true
         else
             provider_get_validation_error >&2; exit 1
@@ -896,7 +903,7 @@ else
             MODEL_TIER="high"
         fi
         if ! provider_setup_env "$MODEL_TIER" "$CUSTOM_MODEL"; then
-            if [[ "$PROVIDER_FLAG" == "lmstudio" || "$PROVIDER_FLAG" == "ollama" || "$PROVIDER_FLAG" == "local" ]]; then
+            if [[ "$PROVIDER_FLAG" == "lmstudio" || "$PROVIDER_FLAG" == "ollama" || "$PROVIDER_FLAG" == "local" || "$PROVIDER_FLAG" == "dgx" ]]; then
                 _PROVIDER_FAILED=true
             else
                 exit 1
@@ -905,6 +912,9 @@ else
     fi
     if [[ "$_PROVIDER_FAILED" == true ]]; then
         if [[ "$PROVIDER_FLAG" == "local" && "$CLI_PROVIDER_FLAG" == "local" ]]; then
+            exit 1
+        fi
+        if [[ "$PROVIDER_FLAG" == "dgx" && "$CLI_PROVIDER_FLAG" == "dgx" ]]; then
             exit 1
         fi
         echo "" >&2
@@ -1129,7 +1139,7 @@ if command -v claude &>/dev/null; then
     claude --help 2>/dev/null \
         | grep -oE '\-\-[a-zA-Z][a-zA-Z0-9-]*' \
         | sed 's/^--//' \
-        | grep -vxE 'aws|vertex|apikey|azure|vercel|pro|ollama|ol|lmstudio|lm|local|team|teams|opus|sonnet|haiku|high|mid|low|model|tool|cc|codex|skip|bypass|live|quiet|effort|profile|version|help|set-default|clear-default|stdin-position' \
+        | grep -vxE 'aws|vertex|apikey|azure|vercel|pro|ollama|ol|lmstudio|lm|local|dgx|team|teams|opus|sonnet|haiku|high|mid|low|model|tool|cc|codex|skip|bypass|live|quiet|effort|profile|version|help|set-default|clear-default|stdin-position' \
         | sort -u > "$CONFIG_DIR/.cc-flags" 2>/dev/null || true
 fi
 

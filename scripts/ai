@@ -89,6 +89,8 @@ _parse_shebang_flags() {
                 SHEBANG_PROVIDER="lmstudio" ;;
             --local)
                 SHEBANG_PROVIDER="local" ;;
+            --dgx)
+                SHEBANG_PROVIDER="dgx" ;;
             --opus|--high)
                 SHEBANG_MODEL_TIER="high" ;;
             --sonnet|--mid)
@@ -332,6 +334,7 @@ while [[ $# -gt 0 ]]; do
         --ollama|--ol)     PROVIDER_FLAG="ollama"; shift ;;
         --lmstudio|--lm) PROVIDER_FLAG="lmstudio"; shift ;;
         --local)          PROVIDER_FLAG="local"; shift ;;
+        --dgx)            PROVIDER_FLAG="dgx"; shift ;;
 
         # Agent Teams
         --team|--teams) TEAM_MODE="enabled"; shift ;;
@@ -525,6 +528,7 @@ Provider flags (pick one):
   --ollama, --ol               Local Ollama (free, Anthropic-API-compatible)
   --lmstudio, --lm             Local LM Studio (MLX support)
   --local                      User-defined local provider (Anthropic-compatible)
+  --dgx                        DGX Spark remote Ollama (VPN, Anthropic-compatible)
 
 Model flags (pick one):
   --opus, --high               Highest-tier model (default)

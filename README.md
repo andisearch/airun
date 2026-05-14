@@ -368,6 +368,7 @@ Claude Code is the default runtime when both are installed. If only Codex is ins
 | `--ollama` / `--ol` | Ollama | Yes | Yes | Local |
 | `--lmstudio` / `--lm` | LM Studio | Yes | Yes | Local |
 | `--local` | User-defined local provider | Yes | — | Local |
+| `--dgx` | DGX Spark (remote Ollama) | Yes | — | Local |
 | `--aws` | AWS Bedrock | Yes | — | Cloud |
 | `--vertex` | Google Vertex AI | Yes | — | Cloud |
 | `--apikey` | Anthropic / OpenAI API | Yes | Yes | Cloud |
@@ -386,6 +387,7 @@ ai --ollama                    # Claude Code + Ollama
 ai --codex --ollama            # Codex CLI + Ollama
 ai local-onboard               # Configure Flow or another local Claude Code backend
 ai --local --model gemma-4-26B-A4B-it-UD-Q4_K_M
+ai --dgx                       # DGX Spark remote Ollama over VPN
 
 # Claude Code cloud providers
 ai --aws --opus task.md        # AWS Bedrock + Opus 4.7

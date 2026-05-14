@@ -26,6 +26,7 @@ _get_provider_file() {
         ollama)         echo "ollama.sh" ;;
         lmstudio|lm)    echo "lmstudio.sh" ;;
         local)          echo "local.sh" ;;
+        dgx)            echo "dgx.sh" ;;
         *)              echo "" ;;
     esac
 }
@@ -42,7 +43,7 @@ load_provider() {
     provider_file=$(_get_provider_file "$flag")
     if [ -z "$provider_file" ]; then
         print_error "Unknown provider: $flag"
-        print_error "Available providers: aws, vertex, apikey, azure, vercel, pro, ollama, lmstudio, local"
+        print_error "Available providers: aws, vertex, apikey, azure, vercel, pro, ollama, lmstudio, local, dgx"
         return 1
     fi
 
@@ -72,7 +73,7 @@ is_provider_loaded() {
 
 # List all available provider flags
 list_providers() {
-    echo "aws vertex apikey azure vercel pro ollama lmstudio local"
+    echo "aws vertex apikey azure vercel pro ollama lmstudio local dgx"
 }
 
 # Detect default provider based on available credentials
@@ -170,5 +171,5 @@ print_no_provider_error() {
     print_error "  ai local-onboard"
     print_error ""
     print_error "Or configure a cloud provider in ~/.ai-runner/secrets.sh"
-    print_error "Available providers: aws, vertex, apikey, azure, vercel, pro, ollama, lmstudio, local"
+    print_error "Available providers: aws, vertex, apikey, azure, vercel, pro, ollama, lmstudio, local, dgx"
 }
