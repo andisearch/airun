@@ -35,6 +35,7 @@ source "$LIB_DIR/core-utils.sh"
 # Source loaders
 source "$LIB_DIR/provider-loader.sh"
 source "$LIB_DIR/tool-loader.sh"
+source "$LIB_DIR/local-provider-manager.sh"
 
 # --- Process isolation for nested/composable scripts ---
 # When ai scripts call other ai scripts, children inherit the parent's
@@ -86,6 +87,10 @@ _parse_shebang_flags() {
                 SHEBANG_PROVIDER="ollama" ;;
             --lmstudio|--lm)
                 SHEBANG_PROVIDER="lmstudio" ;;
+            --local)
+                SHEBANG_PROVIDER="local" ;;
+            --dgx)
+                SHEBANG_PROVIDER="dgx" ;;
             --opus|--high)
                 SHEBANG_MODEL_TIER="high" ;;
             --sonnet|--mid)
@@ -285,6 +290,7 @@ LIVE_OUTPUT=false
 QUIET_MODE=false
 EFFORT_LEVEL=""
 TOOL_PROFILE=""
+LOCAL_ONBOARD=false
 
 while [[ $# -gt 0 ]]; do
     case $1 in
@@ -327,6 +333,8 @@ while [[ $# -gt 0 ]]; do
         # Provider selection (local)
         --ollama|--ol)     PROVIDER_FLAG="ollama"; shift ;;
         --lmstudio|--lm) PROVIDER_FLAG="lmstudio"; shift ;;
+        --local)          PROVIDER_FLAG="local"; shift ;;
+        --dgx)            PROVIDER_FLAG="dgx"; shift ;;
 
         # Agent Teams
         --team|--teams) TEAM_MODE="enabled"; shift ;;
@@ -424,6 +432,9 @@ while [[ $# -gt 0 ]]; do
             shift ;;
 
         # Subcommands
+        local-onboard)
+            LOCAL_ONBOARD=true
+            shift ;;
         update)
             source "$LIB_DIR/update-checker.sh"
             run_update
@@ -497,6 +508,7 @@ here are passed straight through to the underlying tool (claude).
 
 Usage:
   ai [OPTIONS] [file.md]       Execute a markdown prompt or start a session
+  ai local-onboard             Configure a generic local provider
   ai update                    Update AI Runner to the latest version
 
 Modes:
@@ -515,6 +527,8 @@ Provider flags (pick one):
   --pro                        Claude Pro subscription
   --ollama, --ol               Local Ollama (free, Anthropic-API-compatible)
   --lmstudio, --lm             Local LM Studio (MLX support)
+  --local                      User-defined local provider (Anthropic-compatible)
+  --dgx                        DGX Spark remote Ollama (VPN, Anthropic-compatible)
 
 Model flags (pick one):
   --opus, --high               Highest-tier model (default)
@@ -592,6 +606,10 @@ Examples:
   # Run with local Ollama (free, no API key needed)
   ai --ollama task.md
 
+  # Configure and use a generic local provider
+  ai local-onboard
+  ai --local task.md
+
   # Run with AWS Bedrock using the strongest model
   ai --aws --opus task.md
 
@@ -639,6 +657,11 @@ if [[ "$CLEAR_DEFAULT" == true ]]; then
     exit 0
 fi
 
+if [[ "$LOCAL_ONBOARD" == true ]]; then
+    run_local_provider_onboarding || exit 1
+    exit 0
+fi
+
 # Apply saved defaults if no CLI flags
 # Tool default
 [[ -z "$TOOL_FLAG" && -n "$AI_DEFAULT_TOOL" ]] && TOOL_FLAG="$AI_DEFAULT_TOOL"
@@ -661,6 +684,16 @@ fi
 USING_DEFAULTS=false
 if [[ -z "$CLI_PROVIDER_FLAG" && -z "$CLI_MODEL_TIER" && -z "$CLI_CUSTOM_MODEL" ]] && [ -f "$DEFAULTS_FILE" ]; then
     USING_DEFAULTS=true
+fi
+
+if [[ "$PROVIDER_FLAG" == "local" ]] && ! local_provider_is_configured; then
+    if is_interactive; then
+        run_local_provider_onboarding || exit 1
+        load_config_quiet
+    else
+        print_error "No local provider is configured. Run: ai local-onboard"
+        exit 1
+    fi
 fi
 
 # First-time setup (if needed and interactive)
@@ -733,7 +766,7 @@ if [[ "$_TOOL_SELF_MANAGED" == true ]]; then
     fi
 else
     #=========================================================================
-    # Provider-managed tool (Claude Code): existing provider flow
+    # Provider-managed tool (Claude Code): provider-managed path
     #=========================================================================
 
     # Auto-detect provider if not specified
@@ -753,7 +786,7 @@ else
         # Validate provider configuration
         _PROVIDER_FAILED=false
         if ! provider_validate_config; then
-            if [[ "$PROVIDER_FLAG" == "lmstudio" || "$PROVIDER_FLAG" == "ollama" ]]; then
+            if [[ "$PROVIDER_FLAG" == "lmstudio" || "$PROVIDER_FLAG" == "ollama" || "$PROVIDER_FLAG" == "local" || "$PROVIDER_FLAG" == "dgx" ]]; then
                 provider_get_validation_error >&2
                 _PROVIDER_FAILED=true
             else
@@ -779,7 +812,7 @@ else
 
             # Setup provider environment
             if ! provider_setup_env "$MODEL_TIER" "$CUSTOM_MODEL"; then
-                if [[ "$PROVIDER_FLAG" == "lmstudio" || "$PROVIDER_FLAG" == "ollama" ]]; then
+                if [[ "$PROVIDER_FLAG" == "lmstudio" || "$PROVIDER_FLAG" == "ollama" || "$PROVIDER_FLAG" == "local" || "$PROVIDER_FLAG" == "dgx" ]]; then
                     _PROVIDER_FAILED=true
                 else
                     exit 1
@@ -790,6 +823,12 @@ else
     # Fallback: local provider unavailable — auto-detect default provider
     #=========================================================================
     if [[ "$_PROVIDER_FAILED" == true ]]; then
+        if [[ "$PROVIDER_FLAG" == "local" && "$CLI_PROVIDER_FLAG" == "local" ]]; then
+            exit 1
+        fi
+        if [[ "$PROVIDER_FLAG" == "dgx" && "$CLI_PROVIDER_FLAG" == "dgx" ]]; then
+            exit 1
+        fi
         echo "" >&2
         # Reset model selections (were for local provider)
         MODEL_TIER=""
@@ -889,7 +928,7 @@ fi
 # Warn about provider-gated passthrough flags
 if [[ " ${CLAUDE_ARGS[*]} " == *" --chrome "* ]]; then
     case "$PROVIDER_FLAG" in
-        ollama|lmstudio|aws|vertex|azure|vercel)
+        ollama|lmstudio|local|dgx|aws|vertex|azure|vercel)
             print_warning "--chrome requires a direct Anthropic plan (Pro/Max). May not work with --$PROVIDER_FLAG" ;;
     esac
 fi
