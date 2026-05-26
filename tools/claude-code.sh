@@ -33,9 +33,16 @@ tool_setup_env() {
     return 0
 }
 
+_claude_model_flag() {
+    # Claude Code 2.1+ ignores ANTHROPIC_MODEL env var; pass it as --model flag instead.
+    if [[ -n "$ANTHROPIC_MODEL" ]]; then
+        echo "--model" "$ANTHROPIC_MODEL"
+    fi
+}
+
 tool_execute_interactive() {
     local args=("$@")
-    exec claude "${args[@]}"
+    exec claude $(_claude_model_flag) "${args[@]}"
 }
 
 tool_execute_prompt() {
@@ -59,7 +66,7 @@ tool_execute_prompt() {
             disown "$_hb_pid" 2>/dev/null
 
             # local assignment masks non-zero exit (safe under set -e)
-            local _output=$(echo "$prompt" | claude -p --append-system-prompt "$_sys_prompt" "${args[@]}" | \
+            local _output=$(echo "$prompt" | claude -p $(_claude_model_flag) --append-system-prompt "$_sys_prompt" "${args[@]}" | \
                 jq --unbuffered -c 'select(.type == "assistant")' 2>/dev/null | {
                 _prev=""
                 while IFS= read -r _event; do
@@ -98,7 +105,7 @@ tool_execute_prompt() {
             local _hb_pid=$!
             disown "$_hb_pid" 2>/dev/null
 
-            echo "$prompt" | claude -p "${args[@]}" | \
+            echo "$prompt" | claude -p $(_claude_model_flag) "${args[@]}" | \
                 jq --unbuffered -r 'select(.type == "assistant") | .message.content[] | select(.type == "text") | .text' 2>/dev/null | {
                 while IFS= read -r _line; do
                     date +%s > "$_hb_signal"
@@ -110,7 +117,7 @@ tool_execute_prompt() {
             rm -f "$_hb_signal"
         fi
     else
-        echo "$prompt" | claude -p "${args[@]}"
+        echo "$prompt" | claude -p $(_claude_model_flag) "${args[@]}"
     fi
 }
 
