@@ -75,7 +75,7 @@ provider_get_model_id() {
     # Use Anthropic API model names for Claude Pro
     # Honors CLAUDE_MODEL_*_ANTHROPIC overrides from secrets.sh (same namespace as --apikey)
     case "$tier" in
-        high) echo "${CLAUDE_MODEL_OPUS_ANTHROPIC:-claude-opus-4-7}" ;;
+        high) echo "${CLAUDE_MODEL_OPUS_ANTHROPIC:-claude-opus-4-8}" ;;
         mid)  echo "${CLAUDE_MODEL_SONNET_ANTHROPIC:-claude-sonnet-4-6}" ;;
         low)  echo "${CLAUDE_MODEL_HAIKU_ANTHROPIC:-claude-haiku-4-5}" ;;
         *)    echo "${CLAUDE_MODEL_SONNET_ANTHROPIC:-claude-sonnet-4-6}" ;;
