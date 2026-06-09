@@ -91,30 +91,38 @@
 # These provider-specific variables are used by our scripts to set ANTHROPIC_MODEL
 # at runtime based on which provider you're using.
 
+# Fable 5 (--fable/--best) is the top tier, above Opus, on Anthropic providers only.
+# Defaults are set in config/models.sh; uncomment below to override.
+
 # AWS Bedrock Models
 # export CLAUDE_MODEL_SONNET_AWS="global.anthropic.claude-sonnet-4-6"
 # export CLAUDE_MODEL_OPUS_AWS="global.anthropic.claude-opus-4-8"
 # export CLAUDE_MODEL_HAIKU_AWS="us.anthropic.claude-haiku-4-5-20251001-v1:0"
+# export CLAUDE_MODEL_FABLE_AWS="global.anthropic.claude-fable-5"
 
 # Google Vertex Models
 # export CLAUDE_MODEL_SONNET_VERTEX="claude-sonnet-4-6"
 # export CLAUDE_MODEL_OPUS_VERTEX="claude-opus-4-8"
 # export CLAUDE_MODEL_HAIKU_VERTEX="claude-haiku-4-5@20251001"
+# export CLAUDE_MODEL_FABLE_VERTEX="claude-fable-5"
 
-# Anthropic API Models
+# Anthropic API Models (also used by --pro)
 # export CLAUDE_MODEL_SONNET_ANTHROPIC="claude-sonnet-4-6"
 # export CLAUDE_MODEL_OPUS_ANTHROPIC="claude-opus-4-8"
 # export CLAUDE_MODEL_HAIKU_ANTHROPIC="claude-haiku-4-5"
+# export CLAUDE_MODEL_FABLE_ANTHROPIC="claude-fable-5"
 
 # Microsoft Foundry/Azure Models (deployment names - must match your Azure deployments)
 # export CLAUDE_MODEL_SONNET_AZURE="claude-sonnet-4-6"
 # export CLAUDE_MODEL_OPUS_AZURE="claude-opus-4-8"
 # export CLAUDE_MODEL_HAIKU_AZURE="claude-haiku-4-5"
+# export CLAUDE_MODEL_FABLE_AZURE="claude-fable-5"
 
 # Vercel AI Gateway Models (supports any model via Vercel AI Gateway)
 # export CLAUDE_MODEL_SONNET_VERCEL="anthropic/claude-sonnet-4.6"
 # export CLAUDE_MODEL_OPUS_VERCEL="anthropic/claude-opus-4.8"
 # export CLAUDE_MODEL_HAIKU_VERCEL="anthropic/claude-haiku-4.5"
+# export CLAUDE_MODEL_FABLE_VERCEL="anthropic/claude-fable-5"
 # Non-Anthropic models (see https://vercel.com/ai-gateway/models):
 # export CLAUDE_MODEL_SONNET_VERCEL="xai/grok-code-fast-1"
 # export CLAUDE_MODEL_SONNET_VERCEL="openai/gpt-5.2-codex"

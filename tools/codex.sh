@@ -143,6 +143,9 @@ tool_setup_env() {
 # Map MODEL_TIER to Codex model IDs (overridable via secrets.sh)
 _map_codex_model_tier() {
     case "$MODEL_TIER" in
+        # Fable 5 is Anthropic-only; --fable/--best falls back to Codex's highest tier
+        fable) _CODEX_MODEL="${CODEX_MODEL_HIGH:-gpt-5.4}"
+               echo "Note: Claude Fable 5 is Anthropic-only — using Codex's highest-tier model instead." >&2 ;;
         high) _CODEX_MODEL="${CODEX_MODEL_HIGH:-gpt-5.4}" ;;
         mid)  _CODEX_MODEL="${CODEX_MODEL_MID:-gpt-5.3-codex}" ;;
         low)  _CODEX_MODEL="${CODEX_MODEL_LOW:-gpt-5.4-mini}" ;;

@@ -118,6 +118,7 @@ provider_setup_env() {
             fi
         fi
     else
+        [ "$(_normalize_tier "$tier")" = "fable" ] && _notice_fable_fallback "LM Studio"
         export ANTHROPIC_MODEL=$(provider_get_model_id "$tier")
     fi
 
@@ -153,7 +154,8 @@ provider_get_model_id() {
     # Unlike Ollama, LM Studio has no standardized model naming
     # Users download arbitrary models, so we default to first available
     case "$tier" in
-        high)
+        fable|high)
+            # Fable 5 is Anthropic-only; --fable/--best falls back to the highest local tier
             if [ -n "$LMSTUDIO_MODEL_HIGH" ]; then
                 echo "$LMSTUDIO_MODEL_HIGH"
                 return

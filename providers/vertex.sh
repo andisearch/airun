@@ -127,6 +127,7 @@ provider_get_model_id() {
     local tier=$(_normalize_tier "$1")
 
     case "$tier" in
+        fable) echo "${CLAUDE_MODEL_FABLE_VERTEX:-claude-fable-5}" ;;
         high) echo "${CLAUDE_MODEL_OPUS_VERTEX:-claude-opus-4-8}" ;;
         mid)  echo "${CLAUDE_MODEL_SONNET_VERTEX:-claude-sonnet-4-6}" ;;
         low)  echo "${CLAUDE_MODEL_HAIKU_VERTEX:-claude-haiku-4-5@20251001}" ;;

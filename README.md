@@ -33,7 +33,7 @@ Choose your runtime — [Claude Code](https://claude.ai/code) or [Codex CLI](htt
 - Executable markdown with `#!/usr/bin/env ai` shebang for script automation
 - Unix pipe support: pipe data into scripts, redirect output, chain in pipelines
 - Cross-cloud provider switching: use Claude on AWS, Vertex, Azure, Anthropic API, or Codex on OpenAI, Azure OpenAI, OpenRouter + switch mid-conversation to bypass rate limits
-- Model tiers: `--opus`/`--high`, `--sonnet`/`--mid`, `--haiku`/`--low` — maps to each runtime's models
+- Model tiers: `--fable`/`--best` (Claude Fable 5, top tier, Anthropic only), `--opus`/`--high`, `--sonnet`/`--mid`, `--haiku`/`--low` — maps to each runtime's models
 - Cross-interpreter effort control: `--effort low|medium|high|max`
 - Session continuity: `--resume` picks up your previous chats with any model/provider
 - Non-destructive: plain `claude` and `codex` always work untouched as before
@@ -140,7 +140,8 @@ ai --codex --ollama               # Ollama with Codex CLI
 ai --lmstudio                     # LM Studio (MLX, Apple Silicon)
 
 # Model tiers (map to each runtime's best models)
-ai --opus task.md                 # Claude: Opus 4.8 / Codex: gpt-5.4
+ai --fable task.md                # Claude: Fable 5 (top tier, Anthropic only); --best is a synonym
+ai --opus task.md                 # Claude: Opus 4.8 (default) / Codex: gpt-5.4
 ai --sonnet task.md               # Claude: Sonnet 4.6 / Codex: gpt-5.3-codex (mid tier)
 ai --haiku task.md                # Claude: Haiku 4.5 / Codex: gpt-5.4-mini
 ai --codex --high task.md         # Codex with gpt-5.4

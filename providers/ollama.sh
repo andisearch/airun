@@ -404,6 +404,7 @@ provider_setup_env() {
             fi
         fi
     else
+        [ "$(_normalize_tier "$tier")" = "fable" ] && _notice_fable_fallback "Ollama"
         export ANTHROPIC_MODEL=$(provider_get_model_id "$tier")
     fi
 
@@ -436,7 +437,8 @@ provider_get_model_id() {
     # Ollama model mappings - configurable via secrets.sh
     # First check explicit config, then auto-detect from available models
     case "$tier" in
-        high)
+        fable|high)
+            # Fable 5 is Anthropic-only; --fable/--best falls back to the highest local tier
             if [ -n "$OLLAMA_MODEL_HIGH" ]; then
                 echo "$OLLAMA_MODEL_HIGH"
             else

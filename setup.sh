@@ -374,6 +374,7 @@ _parse_shebang_flags() {
             --aws|--vertex|--apikey|--azure|--vercel|--pro) SHEBANG_PROVIDER="${arg#--}" ;;
             --ollama|--ol) SHEBANG_PROVIDER="ollama" ;;
             --lmstudio|--lm) SHEBANG_PROVIDER="lmstudio" ;;
+            --fable|--best) SHEBANG_MODEL_TIER="fable" ;;
             --opus|--high) SHEBANG_MODEL_TIER="high" ;;
             --sonnet|--mid) SHEBANG_MODEL_TIER="mid" ;;
             --haiku|--low) SHEBANG_MODEL_TIER="low" ;;
@@ -571,6 +572,7 @@ while [[ $# -gt 0 ]]; do
         --permission-mode) EXPLICIT_PERMISSION_MODE=true; CLAUDE_ARGS+=("$1" "$2"); shift 2 ;;
         --permission-mode=*) EXPLICIT_PERMISSION_MODE=true; CLAUDE_ARGS+=("$1"); shift ;;
         --dangerously-skip-permissions) EXPLICIT_PERMISSION_MODE=true; CLAUDE_ARGS+=("$1"); shift ;;
+        --fable|--best) MODEL_TIER="fable"; shift ;;
         --opus|--high) MODEL_TIER="high"; shift ;;
         --sonnet|--mid) MODEL_TIER="mid"; shift ;;
         --haiku|--low) MODEL_TIER="low"; shift ;;
@@ -664,7 +666,8 @@ Provider flags (pick one):
   --lmstudio, --lm             Local LM Studio (MLX support)
 
 Model flags (pick one):
-  --opus, --high               Highest-tier model (default)
+  --fable, --best              Most capable model — Claude Fable 5 (Anthropic providers only)
+  --opus, --high               Highest Opus-tier model (default)
   --sonnet, --mid              Mid-tier model
   --haiku, --low               Lowest-tier model
   --model <id>                 Specific model ID (e.g. claude-opus-4-8)

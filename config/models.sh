@@ -20,6 +20,9 @@
 export CLAUDE_MODEL_SONNET_AWS="${CLAUDE_MODEL_SONNET_AWS:-global.anthropic.claude-sonnet-4-6}"
 export CLAUDE_MODEL_OPUS_AWS="${CLAUDE_MODEL_OPUS_AWS:-global.anthropic.claude-opus-4-8}"
 export CLAUDE_MODEL_HAIKU_AWS="${CLAUDE_MODEL_HAIKU_AWS:-us.anthropic.claude-haiku-4-5-20251001-v1:0}"
+# Fable 5 (top tier, --fable/--best). Uses the global inference-profile prefix
+# to match the OPUS/SONNET defaults above; override to a regional/dated id if needed.
+export CLAUDE_MODEL_FABLE_AWS="${CLAUDE_MODEL_FABLE_AWS:-global.anthropic.claude-fable-5}"
 
 # Google Vertex AI Model Defaults
 # See: https://code.claude.com/docs/en/google-vertex-ai#5-model-configuration
@@ -29,6 +32,7 @@ export CLAUDE_MODEL_HAIKU_AWS="${CLAUDE_MODEL_HAIKU_AWS:-us.anthropic.claude-hai
 export CLAUDE_MODEL_SONNET_VERTEX="${CLAUDE_MODEL_SONNET_VERTEX:-claude-sonnet-4-6}"
 export CLAUDE_MODEL_OPUS_VERTEX="${CLAUDE_MODEL_OPUS_VERTEX:-claude-opus-4-8}"
 export CLAUDE_MODEL_HAIKU_VERTEX="${CLAUDE_MODEL_HAIKU_VERTEX:-claude-haiku-4-5@20251001}"
+export CLAUDE_MODEL_FABLE_VERTEX="${CLAUDE_MODEL_FABLE_VERTEX:-claude-fable-5}"  # Fable 5 (--fable/--best)
 
 # Anthropic API Model Defaults
 # See: https://docs.anthropic.com/
@@ -37,6 +41,8 @@ export CLAUDE_MODEL_HAIKU_VERTEX="${CLAUDE_MODEL_HAIKU_VERTEX:-claude-haiku-4-5@
 export CLAUDE_MODEL_SONNET_ANTHROPIC="${CLAUDE_MODEL_SONNET_ANTHROPIC:-claude-sonnet-4-6}"
 export CLAUDE_MODEL_OPUS_ANTHROPIC="${CLAUDE_MODEL_OPUS_ANTHROPIC:-claude-opus-4-8}"
 export CLAUDE_MODEL_HAIKU_ANTHROPIC="${CLAUDE_MODEL_HAIKU_ANTHROPIC:-claude-haiku-4-5}"
+# Fable 5 (--fable/--best). Also used by Claude Pro (shared Anthropic namespace).
+export CLAUDE_MODEL_FABLE_ANTHROPIC="${CLAUDE_MODEL_FABLE_ANTHROPIC:-claude-fable-5}"
 
 # Microsoft Foundry on Azure Model Defaults
 # See: https://code.claude.com/docs/en/microsoft-foundry
@@ -45,6 +51,7 @@ export CLAUDE_MODEL_HAIKU_ANTHROPIC="${CLAUDE_MODEL_HAIKU_ANTHROPIC:-claude-haik
 export CLAUDE_MODEL_SONNET_AZURE="${CLAUDE_MODEL_SONNET_AZURE:-claude-sonnet-4-6}"
 export CLAUDE_MODEL_OPUS_AZURE="${CLAUDE_MODEL_OPUS_AZURE:-claude-opus-4-8}"
 export CLAUDE_MODEL_HAIKU_AZURE="${CLAUDE_MODEL_HAIKU_AZURE:-claude-haiku-4-5}"
+export CLAUDE_MODEL_FABLE_AZURE="${CLAUDE_MODEL_FABLE_AZURE:-claude-fable-5}"  # Fable 5 deployment name (--fable/--best)
 
 # Vercel AI Gateway Model Defaults
 # See: https://vercel.com/ai-gateway
@@ -52,6 +59,8 @@ export CLAUDE_MODEL_HAIKU_AZURE="${CLAUDE_MODEL_HAIKU_AZURE:-claude-haiku-4-5}"
 export CLAUDE_MODEL_SONNET_VERCEL="${CLAUDE_MODEL_SONNET_VERCEL:-anthropic/claude-sonnet-4.6}"
 export CLAUDE_MODEL_OPUS_VERCEL="${CLAUDE_MODEL_OPUS_VERCEL:-anthropic/claude-opus-4.8}"
 export CLAUDE_MODEL_HAIKU_VERCEL="${CLAUDE_MODEL_HAIKU_VERCEL:-anthropic/claude-haiku-4.5}"
+# Fable 5 (--fable/--best). Slug not yet confirmed in Vercel's catalog; override if it differs.
+export CLAUDE_MODEL_FABLE_VERCEL="${CLAUDE_MODEL_FABLE_VERCEL:-anthropic/claude-fable-5}"
 
 # Ollama Model Defaults (Local + Cloud)
 # See: https://docs.ollama.com/integrations/claude-code

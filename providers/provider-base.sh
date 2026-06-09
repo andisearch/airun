@@ -89,16 +89,23 @@ _provider_restore_env() {
 }
 
 # Helper to map tier aliases to canonical names
-# Input: --opus, --sonnet, --haiku, --high, --mid, --low
-# Output: high, mid, low
+# Input: --opus, --sonnet, --haiku, --high, --mid, --low, --fable, --best
+# Output: fable, high, mid, low
 _normalize_tier() {
     local tier="$1"
     case "$tier" in
+        --fable|--best|fable|best) echo "fable" ;;
         --opus|--high|high|opus)   echo "high" ;;
         --sonnet|--mid|mid|sonnet) echo "mid" ;;
         --haiku|--low|low|haiku)   echo "low" ;;
         *)                          echo "mid" ;;  # default
     esac
+}
+
+# Notice printed when --fable/--best is used on a runtime that doesn't have
+# Claude Fable 5 (local providers, Codex). $1 = friendly runtime name.
+_notice_fable_fallback() {
+    echo "Note: Claude Fable 5 is Anthropic-only — using ${1}'s highest-tier model instead." >&2
 }
 
 # Disable all provider modes (call before enabling specific provider)

@@ -5,6 +5,21 @@ All notable changes to AI Runner will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.6.0] - 2026-06-09
+
+### Added
+- **Claude Fable 5 support** with new `--fable` / `--best` shortcuts (synonyms) following Anthropic's release on 2026-06-09. Fable 5 is Anthropic's most capable model, a tier above Opus. **Opus 4.8 remains the default** — Fable is opt-in.
+  - Anthropic API / Pro: `claude-fable-5`
+  - AWS Bedrock: `global.anthropic.claude-fable-5` (global inference profile, same convention as Opus)
+  - Vertex AI: `claude-fable-5`
+  - Azure Foundry: `claude-fable-5` (default deployment name)
+  - Vercel AI Gateway: `anthropic/claude-fable-5` (slug not yet confirmed in Vercel's catalog; overridable)
+  - Overridable per provider via `CLAUDE_MODEL_FABLE_{AWS,VERTEX,ANTHROPIC,AZURE,VERCEL}`.
+- **Graceful fallback on non-Anthropic runtimes**: `--fable`/`--best` on Ollama, LM Studio, and Codex falls back to that runtime's highest tier and prints a one-line notice (never errors).
+
+### Notes
+- Claude Pro/Max: `--fable` works but availability depends on your subscription entitlement.
+
 ## [2.5.5] - 2026-05-28
 
 ### Changed

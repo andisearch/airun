@@ -239,7 +239,7 @@ test_provider_flags() {
 test_model_flags() {
     test_header "Model tier flag parsing"
 
-    local flags=("opus" "sonnet" "haiku" "high" "mid" "low")
+    local flags=("fable" "best" "opus" "sonnet" "haiku" "high" "mid" "low")
 
     for flag in "${flags[@]}"; do
         if grep -q -- "--$flag)" "$PROJECT_DIR/scripts/ai"; then
@@ -248,6 +248,57 @@ test_model_flags() {
             fail "Model flag --$flag not found"
         fi
     done
+
+    # --fable/--best must also be wired in the installed wrapper (setup.sh heredoc)
+    if grep -q -- '--fable|--best) MODEL_TIER="fable"' "$PROJECT_DIR/setup.sh" \
+       && grep -q -- '--fable|--best) SHEBANG_MODEL_TIER="fable"' "$PROJECT_DIR/setup.sh"; then
+        pass "Fable flags wired in setup.sh heredoc (dev/installed parity)"
+    else
+        fail "Fable flags missing from setup.sh heredoc"
+    fi
+}
+
+#=============================================================================
+# Fable 5 tier resolution
+#=============================================================================
+test_fable_tier() {
+    test_header "Fable 5 tier resolution"
+
+    # _normalize_tier maps both synonyms to the canonical 'fable'
+    local norm
+    norm=$(bash -c "source '$PROJECT_DIR/providers/provider-base.sh' >/dev/null 2>&1; _normalize_tier --best")
+    if [[ "$norm" == "fable" ]]; then
+        pass "_normalize_tier maps --best -> fable"
+    else
+        fail "_normalize_tier --best returned '$norm' (expected fable)"
+    fi
+
+    # Anthropic providers resolve fable -> claude-fable-5 (default)
+    local p out
+    for p in apikey pro vertex azure; do
+        out=$(bash -c "source '$PROJECT_DIR/config/models.sh' >/dev/null 2>&1; source '$PROJECT_DIR/providers/$p.sh' >/dev/null 2>&1; provider_get_model_id fable")
+        if [[ "$out" == "claude-fable-5" ]]; then
+            pass "$p resolves fable -> claude-fable-5"
+        else
+            fail "$p resolved fable -> '$out' (expected claude-fable-5)"
+        fi
+    done
+
+    # AWS uses the global inference-profile prefix
+    out=$(bash -c "source '$PROJECT_DIR/config/models.sh' >/dev/null 2>&1; source '$PROJECT_DIR/providers/aws.sh' >/dev/null 2>&1; provider_get_model_id fable")
+    if [[ "$out" == "global.anthropic.claude-fable-5" ]]; then
+        pass "aws resolves fable -> global.anthropic.claude-fable-5"
+    else
+        fail "aws resolved fable -> '$out'"
+    fi
+
+    # Default (no flag) must remain Opus-tier, not Fable
+    out=$(bash -c "source '$PROJECT_DIR/config/models.sh' >/dev/null 2>&1; source '$PROJECT_DIR/providers/apikey.sh' >/dev/null 2>&1; provider_get_model_id high")
+    if [[ "$out" == "claude-opus-4-8" ]]; then
+        pass "high tier still resolves to Opus (default unchanged)"
+    else
+        fail "high tier resolved to '$out' (expected claude-opus-4-8)"
+    fi
 }
 
 #=============================================================================
@@ -719,13 +770,13 @@ test_permission_shortcut_shebang() {
     local ai_script="$PROJECT_DIR/scripts/ai"
 
     # Check --skip and --bypass handled in _parse_shebang_flags
-    if grep -A50 '_parse_shebang_flags()' "$ai_script" | grep -q -- '--skip)'; then
+    if grep -A70 '_parse_shebang_flags()' "$ai_script" | grep -q -- '--skip)'; then
         pass "--skip handled in shebang flag parser"
     else
         fail "--skip not found in shebang flag parser"
     fi
 
-    if grep -A50 '_parse_shebang_flags()' "$ai_script" | grep -q -- '--bypass)'; then
+    if grep -A70 '_parse_shebang_flags()' "$ai_script" | grep -q -- '--bypass)'; then
         pass "--bypass handled in shebang flag parser"
     else
         fail "--bypass not found in shebang flag parser"
@@ -847,7 +898,7 @@ test_shebang_flag_parsing() {
 
     # Check all provider flags handled in parser
     for flag in aws vertex apikey azure vercel pro; do
-        if grep -A50 '_parse_shebang_flags()' "$ai_script" | grep -q -- "--$flag"; then
+        if grep -A70 '_parse_shebang_flags()' "$ai_script" | grep -q -- "--$flag"; then
             pass "Shebang parser handles --$flag"
         else
             fail "Shebang parser missing --$flag"
@@ -856,7 +907,7 @@ test_shebang_flag_parsing() {
 
     # Check local provider aliases
     for flag in ollama lmstudio ol lm; do
-        if grep -A50 '_parse_shebang_flags()' "$ai_script" | grep -q -- "--$flag"; then
+        if grep -A70 '_parse_shebang_flags()' "$ai_script" | grep -q -- "--$flag"; then
             pass "Shebang parser handles --$flag"
         else
             fail "Shebang parser missing --$flag"
@@ -865,7 +916,7 @@ test_shebang_flag_parsing() {
 
     # Check model tier flags
     for flag in opus sonnet haiku high mid low; do
-        if grep -A50 '_parse_shebang_flags()' "$ai_script" | grep -q -- "--$flag"; then
+        if grep -A70 '_parse_shebang_flags()' "$ai_script" | grep -q -- "--$flag"; then
             pass "Shebang parser handles --$flag"
         else
             fail "Shebang parser missing --$flag"
@@ -873,19 +924,19 @@ test_shebang_flag_parsing() {
     done
 
     # Check --live and --skip/--bypass
-    if grep -A50 '_parse_shebang_flags()' "$ai_script" | grep -q -- "--live"; then
+    if grep -A70 '_parse_shebang_flags()' "$ai_script" | grep -q -- "--live"; then
         pass "Shebang parser handles --live"
     else
         fail "Shebang parser missing --live"
     fi
 
-    if grep -A50 '_parse_shebang_flags()' "$ai_script" | grep -q -- "--skip"; then
+    if grep -A70 '_parse_shebang_flags()' "$ai_script" | grep -q -- "--skip"; then
         pass "Shebang parser handles --skip"
     else
         fail "Shebang parser missing --skip"
     fi
 
-    if grep -A50 '_parse_shebang_flags()' "$ai_script" | grep -q -- "--bypass"; then
+    if grep -A70 '_parse_shebang_flags()' "$ai_script" | grep -q -- "--bypass"; then
         pass "Shebang parser handles --bypass"
     else
         fail "Shebang parser missing --bypass"
@@ -1885,6 +1936,7 @@ main() {
     test_backward_compat
     test_provider_flags
     test_model_flags
+    test_fable_tier
     test_provider_modules
     test_tool_modules
     test_utility_commands
