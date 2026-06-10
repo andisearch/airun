@@ -242,6 +242,19 @@ ai --aws
 ai --aws --opus task.md
 ```
 
+> **⚠️ `--fable`/`--best` on Bedrock needs a one-time data-sharing enablement.**
+> Fable 5 is a Mythos-class *Covered Model*: Anthropic retains inputs/outputs for 30 days with human review **on every platform that offers Fable 5** (direct API, Pro, Bedrock, Vertex, Azure) — this is a property of the model, not of Bedrock. Bedrock's default mode doesn't share data with the provider, so it won't serve Fable until you enable provider data sharing — until then requests fail mid-session with `400 data retention mode 'default' is not available for this model`.
+>
+> **Enable it** (account-level; no console UI — use the Data Retention API):
+> ```bash
+> curl -X PUT https://bedrock-mantle.<region>.api.aws/v1/data_retention \
+>   -H "x-api-key: <your-bedrock-api-key>" \
+>   -H "Content-Type: application/json" \
+>   -d '{ "mode": "provider_data_share" }'
+> ```
+> Bedrock-specific caveat: enabling this means Fable traffic **leaves AWS's data/security boundary** (it goes to Anthropic). `--apikey` and `--azure` don't need this step — not because they retain less, but because their standard config already shares with Anthropic.
+> Sources: [AWS — Fable 5 on Bedrock](https://aws.amazon.com/blogs/aws/anthropic-claude-fable-5-on-aws-mythos-class-capabilities-with-built-in-safeguards-now-available/) · [Anthropic data-retention policy](https://support.claude.com/en/articles/15425996-data-retention-practices-for-mythos-class-models).
+
 See [AWS Bedrock setup](https://code.claude.com/docs/en/amazon-bedrock) for all auth options including:
 - AWS profiles
 - Access keys
@@ -263,6 +276,20 @@ export CLOUD_ML_REGION="global"
 ai --vertex
 ai --vertex --opus task.md
 ```
+
+> **⚠️ `--fable`/`--best` on Vertex needs a one-time data-sharing enablement.**
+> Fable 5 is a Mythos-class *Covered Model* (30-day retention + human review on every platform that offers it — a model property, not Vertex-specific). Vertex won't serve it until you enable data sharing for the `anthropic` publisher; until then requests fail with `403 ... requires data sharing to be enabled for publisher 'anthropic'`.
+>
+> **Enable it** (project-level) either way:
+> - **Console (simplest):** open the [Claude Fable 5 model card](https://console.cloud.google.com/vertex-ai/publishers/anthropic/model-garden/claude-fable-5) in Vertex AI Model Garden and accept the data-sharing terms.
+> - **API:** call `setPublisherModelConfig`, setting the data-sharing field named in your 403 (`data_sharing_enabled_provider`) to `anthropic`:
+>   ```bash
+>   curl -X POST -H "Authorization: Bearer $(gcloud auth print-access-token)" \
+>     -H "Content-Type: application/json" \
+>     "https://<region>-aiplatform.googleapis.com/v1beta1/projects/<project-id>/locations/<region>/publishers/anthropic/models/claude-fable-5:setPublisherModelConfig" \
+>     -d '{ "publisherModelConfig": { "data_sharing_enabled_provider": "anthropic" } }'
+>   ```
+> `--apikey` and `--azure` don't need this step (their standard config already shares with Anthropic). See [Claude on Vertex AI](https://docs.cloud.google.com/gemini-enterprise-agent-platform/models/partner-models/claude).
 
 See [Vertex AI setup](https://code.claude.com/docs/en/google-vertex-ai) for authentication methods.
 

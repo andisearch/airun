@@ -110,6 +110,14 @@ provider_setup_env() {
         export ANTHROPIC_MODEL=$(provider_get_model_id "$tier")
     fi
 
+    # Fable 5 is a Covered Model: Vertex requires enabling data sharing for the
+    # 'anthropic' publisher before it will serve the model. Without it, requests
+    # fail with "403 ... requires data sharing to be enabled for publisher
+    # 'anthropic'". (Direct Anthropic API and Azure are unaffected.)
+    if [ "$(_normalize_tier "$tier")" = "fable" ]; then
+        print_warning "Fable 5 on Vertex needs data sharing enabled for publisher 'anthropic' (PublisherModelConfig.data_sharing_enabled_provider via the setPublisherModelConfig API), or requests 403. See docs/PROVIDERS.md. Direct API (--apikey) and Azure work without it."
+    fi
+
     # Set small/fast model
     export ANTHROPIC_SMALL_FAST_MODEL=$(provider_get_small_model)
 

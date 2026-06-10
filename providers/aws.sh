@@ -89,6 +89,14 @@ provider_setup_env() {
         export ANTHROPIC_MODEL=$(provider_get_model_id "$tier")
     fi
 
+    # Fable 5 is a Covered Model: Bedrock requires opting into 30-day data
+    # retention (provider_data_share) before it will serve the model. Without
+    # it, requests fail mid-session with "data retention mode 'default' is not
+    # available for this model". (Direct Anthropic API and Azure are unaffected.)
+    if [ "$(_normalize_tier "$tier")" = "fable" ]; then
+        print_warning "Fable 5 on Bedrock needs 30-day data-retention opt-in (provider_data_share via the Bedrock Data Retention API), or requests 400. See docs/PROVIDERS.md. Direct API (--apikey) and Azure work without it."
+    fi
+
     # Set small/fast model
     export ANTHROPIC_SMALL_FAST_MODEL=$(provider_get_small_model)
 
