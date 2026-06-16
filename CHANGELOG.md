@@ -5,6 +5,15 @@ All notable changes to AI Runner will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased] - 2026-06-16
+
+### Fixed
+- **Local provider probe**: `local_provider_probe_messages_from` now accepts any 4xx response with a JSON body as "ready" (was: only 400/422), and 503 responses with a valid Anthropic error envelope (e.g. `"type":"error"`) as "ready" (was: messages_probe_error). This unblocks `ai --local` against backends like flow that return 503 "registered but not loaded" with a structured error body. Provider setup will still surface a specific error later if the configured default model is also unloaded.
+- **Claude Code tool — thinking-block display**: jq filters in `tool_execute_prompt()` now match both `type=="text"` and `type=="thinking"` content blocks, matching Claude Code 2.1+'s new content block format. Previously, non-Anthropic models (e.g. gemma-4 with thinking enabled) would emit thinking blocks that the airun display layer silently dropped.
+
+### Docs
+- Added `HANDOFF-flow-thinking-blocks.md` documenting the upstream flow bug where thinking-only content blocks in conversation history caused a 400 on the next turn. (Now fixed in flow; the doc remains as a regression reference and a handoff for similar future bugs.)
+
 ## [2.5.5] - 2026-05-28
 
 ### Changed
