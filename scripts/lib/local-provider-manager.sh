@@ -162,6 +162,12 @@ local_provider_probe_messages_from() {
         }
     fi
 
+    # Save the body so we can inspect the error envelope on 5xx responses.
+    # Some local providers (e.g. flow) return 503 with a valid Anthropic
+    # `{"type":"error","error":{...}}` body when the requested model is not
+    # loaded — this still proves the Messages API is implemented and working.
+    local probe_body_text
+    probe_body_text=$(cat "$probe_body" 2>/dev/null || true)
     probe_content_type=$(grep -i '^content-type:' "$probe_headers" | tail -1 | cut -d' ' -f2- | tr -d '\r')
     rm -f "$probe_body" "$probe_headers"
 
@@ -183,7 +189,18 @@ local_provider_probe_messages_from() {
         return 1
     fi
 
-    if [[ "$probe_status" == "400" || "$probe_status" == "422" ]]; then
+    # 4xx (except the auth/not-found cases above) with a JSON body means the
+    # Messages API parsed the request and rejected it — that's a "ready" signal.
+    if [[ "$probe_status" =~ ^4[0-9][0-9]$ ]]; then
+        _LOCAL_PROVIDER_VALIDATION_STATUS="ready"
+        return 0
+    fi
+
+    # 503 with a valid Anthropic error envelope means the server speaks the
+    # protocol but the requested model is not loaded (e.g. flow with JIT off).
+    # Still treat as "ready" — provider_setup_env will fail later with a more
+    # specific message if the configured default model is also unloaded.
+    if [[ "$probe_status" == "503" ]] && echo "$probe_body_text" | grep -q '"type":"error"'; then
         _LOCAL_PROVIDER_VALIDATION_STATUS="ready"
         return 0
     fi
