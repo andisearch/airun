@@ -74,14 +74,14 @@ tool_execute_prompt() {
                     printf "\r\033[K" >&2
                     if [[ -n "$_prev" ]]; then
                         # Intermediate turn — full text to stderr
-                        printf '%s\n' "$_prev" | jq -r '.message.content[] | select(.type == "text") | .text' >&2 2>/dev/null
+                        printf '%s\n' "$_prev" | jq -r '.message.content[] | select(.type == "text" or .type == "thinking") | (.text // .thinking)' >&2 2>/dev/null
                     fi
                     _prev="$_event"
                 done
                 # Last turn — split at first content marker (frontmatter --- or heading #)
                 printf "\r\033[K" >&2
                 if [[ -n "$_prev" ]]; then
-                    _text=$(printf '%s\n' "$_prev" | jq -r '.message.content[] | select(.type == "text") | .text' 2>/dev/null)
+                    _text=$(printf '%s\n' "$_prev" | jq -r '.message.content[] | select(.type == "text" or .type == "thinking") | (.text // .thinking)' 2>/dev/null)
                     _split_pat='^(---|#)'
                     if printf '%s\n' "$_text" | grep -qEm1 "$_split_pat"; then
                         printf '%s\n' "$_text" | sed -E '/^(---|#)/,$d' >&2   # preamble → stderr
@@ -106,7 +106,7 @@ tool_execute_prompt() {
             disown "$_hb_pid" 2>/dev/null
 
             echo "$prompt" | claude -p $(_claude_model_flag) "${args[@]}" | \
-                jq --unbuffered -r 'select(.type == "assistant") | .message.content[] | select(.type == "text") | .text' 2>/dev/null | {
+                jq --unbuffered -r 'select(.type == "assistant") | .message.content[] | select(.type == "text" or .type == "thinking") | (.text // .thinking)' 2>/dev/null | {
                 while IFS= read -r _line; do
                     date +%s > "$_hb_signal"
                     printf "\r\033[K" >&2
