@@ -5,6 +5,18 @@ All notable changes to AI Runner will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.6.1] - 2026-06-30
+
+### Changed
+- **Default Sonnet model bumped to 5** across all providers following Anthropic's release.
+  - Anthropic API / Pro: `claude-sonnet-5`
+  - AWS Bedrock: `global.anthropic.claude-sonnet-5` (global inference profile, same convention as Opus/Fable)
+  - Vertex AI: `claude-sonnet-5`
+  - Azure Foundry: `claude-sonnet-5` (default deployment name)
+  - Vercel AI Gateway / OpenRouter: `anthropic/claude-sonnet-5`
+  - Overridable per provider via `CLAUDE_MODEL_SONNET_{AWS,VERTEX,ANTHROPIC,AZURE,VERCEL}` and `ROUTER_MODEL_MID`.
+- Docs updated to reference Sonnet 5 (README, docs/PROVIDERS.md, secrets.example.sh, and the airun-docs site).
+
 ## [2.6.0] - 2026-06-09
 
 ### Added

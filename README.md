@@ -142,7 +142,7 @@ ai --lmstudio                     # LM Studio (MLX, Apple Silicon)
 # Model tiers (map to each runtime's best models)
 ai --fable task.md                # Claude: Fable 5 (top tier, Anthropic only); --best is a synonym
 ai --opus task.md                 # Claude: Opus 4.8 (default) / Codex: gpt-5.4
-ai --sonnet task.md               # Claude: Sonnet 4.6 / Codex: gpt-5.3-codex (mid tier)
+ai --sonnet task.md               # Claude: Sonnet 5 / Codex: gpt-5.3-codex (mid tier)
 ai --haiku task.md                # Claude: Haiku 4.5 / Codex: gpt-5.4-mini
 ai --codex --high task.md         # Codex with gpt-5.4
 
@@ -567,7 +567,7 @@ Default model IDs are defined in `config/models.sh`. Override them in `~/.ai-run
 
 ```bash
 # Override Claude Code AWS model
-export CLAUDE_MODEL_SONNET_AWS="global.anthropic.claude-sonnet-4-6"
+export CLAUDE_MODEL_SONNET_AWS="global.anthropic.claude-sonnet-5"
 
 # Override Codex model tiers
 export CODEX_MODEL_HIGH="gpt-5.4"

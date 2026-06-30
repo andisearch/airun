@@ -112,9 +112,9 @@ provider_get_model_id() {
     case "$tier" in
         fable) echo "${CLAUDE_MODEL_FABLE_AZURE:-claude-fable-5}" ;;
         high) echo "${CLAUDE_MODEL_OPUS_AZURE:-claude-opus-4-8}" ;;
-        mid)  echo "${CLAUDE_MODEL_SONNET_AZURE:-claude-sonnet-4-6}" ;;
+        mid)  echo "${CLAUDE_MODEL_SONNET_AZURE:-claude-sonnet-5}" ;;
         low)  echo "${CLAUDE_MODEL_HAIKU_AZURE:-claude-haiku-4-5}" ;;
-        *)    echo "${CLAUDE_MODEL_SONNET_AZURE:-claude-sonnet-4-6}" ;;
+        *)    echo "${CLAUDE_MODEL_SONNET_AZURE:-claude-sonnet-5}" ;;
     esac
 }
 

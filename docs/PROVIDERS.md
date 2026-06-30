@@ -105,8 +105,8 @@ ai --ollama
 Create aliases for tools expecting Anthropic model names:
 
 ```bash
-ollama cp qwen3-coder claude-sonnet-4-6
-ai --ollama --model claude-sonnet-4-6
+ollama cp qwen3-coder claude-sonnet-5
+ai --ollama --model claude-sonnet-5
 ```
 
 #### Configuration
