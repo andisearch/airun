@@ -16,9 +16,9 @@
 # Official defaults from Claude Code docs:
 #   Primary: global.anthropic.claude-sonnet-5
 #   Small/fast: us.anthropic.claude-haiku-4-5-20251001-v1:0
-# To pin a specific dated version, override in secrets.sh (e.g., claude-opus-4-8)
+# To pin a specific dated version, override in secrets.sh (e.g., claude-opus-5)
 export CLAUDE_MODEL_SONNET_AWS="${CLAUDE_MODEL_SONNET_AWS:-global.anthropic.claude-sonnet-5}"
-export CLAUDE_MODEL_OPUS_AWS="${CLAUDE_MODEL_OPUS_AWS:-global.anthropic.claude-opus-4-8}"
+export CLAUDE_MODEL_OPUS_AWS="${CLAUDE_MODEL_OPUS_AWS:-global.anthropic.claude-opus-5}"
 export CLAUDE_MODEL_HAIKU_AWS="${CLAUDE_MODEL_HAIKU_AWS:-us.anthropic.claude-haiku-4-5-20251001-v1:0}"
 # Fable 5 (top tier, --fable/--best). Uses the global inference-profile prefix
 # to match the OPUS/SONNET defaults above; override to a regional/dated id if needed.
@@ -27,19 +27,19 @@ export CLAUDE_MODEL_FABLE_AWS="${CLAUDE_MODEL_FABLE_AWS:-global.anthropic.claude
 # Google Vertex AI Model Defaults
 # See: https://code.claude.com/docs/en/google-vertex-ai#5-model-configuration
 # Official example from docs:
-#   ANTHROPIC_MODEL='claude-opus-4-8'
+#   ANTHROPIC_MODEL='claude-opus-5'
 #   ANTHROPIC_SMALL_FAST_MODEL='claude-haiku-4-5@20251001'
 export CLAUDE_MODEL_SONNET_VERTEX="${CLAUDE_MODEL_SONNET_VERTEX:-claude-sonnet-5}"
-export CLAUDE_MODEL_OPUS_VERTEX="${CLAUDE_MODEL_OPUS_VERTEX:-claude-opus-4-8}"
+export CLAUDE_MODEL_OPUS_VERTEX="${CLAUDE_MODEL_OPUS_VERTEX:-claude-opus-5}"
 export CLAUDE_MODEL_HAIKU_VERTEX="${CLAUDE_MODEL_HAIKU_VERTEX:-claude-haiku-4-5@20251001}"
 export CLAUDE_MODEL_FABLE_VERTEX="${CLAUDE_MODEL_FABLE_VERTEX:-claude-fable-5}"  # Fable 5 (--fable/--best)
 
 # Anthropic API Model Defaults
 # See: https://docs.anthropic.com/
 # Standard model IDs without provider prefix
-# To pin a specific dated version, override in secrets.sh (e.g., claude-opus-4-8)
+# To pin a specific dated version, override in secrets.sh (e.g., claude-opus-5)
 export CLAUDE_MODEL_SONNET_ANTHROPIC="${CLAUDE_MODEL_SONNET_ANTHROPIC:-claude-sonnet-5}"
-export CLAUDE_MODEL_OPUS_ANTHROPIC="${CLAUDE_MODEL_OPUS_ANTHROPIC:-claude-opus-4-8}"
+export CLAUDE_MODEL_OPUS_ANTHROPIC="${CLAUDE_MODEL_OPUS_ANTHROPIC:-claude-opus-5}"
 export CLAUDE_MODEL_HAIKU_ANTHROPIC="${CLAUDE_MODEL_HAIKU_ANTHROPIC:-claude-haiku-4-5}"
 # Fable 5 (--fable/--best). Also used by Claude Pro (shared Anthropic namespace).
 export CLAUDE_MODEL_FABLE_ANTHROPIC="${CLAUDE_MODEL_FABLE_ANTHROPIC:-claude-fable-5}"
@@ -49,7 +49,7 @@ export CLAUDE_MODEL_FABLE_ANTHROPIC="${CLAUDE_MODEL_FABLE_ANTHROPIC:-claude-fabl
 # Model names are deployment names (user-defined in Azure portal)
 # These are just suggested defaults - users must set their actual deployment names
 export CLAUDE_MODEL_SONNET_AZURE="${CLAUDE_MODEL_SONNET_AZURE:-claude-sonnet-5}"
-export CLAUDE_MODEL_OPUS_AZURE="${CLAUDE_MODEL_OPUS_AZURE:-claude-opus-4-8}"
+export CLAUDE_MODEL_OPUS_AZURE="${CLAUDE_MODEL_OPUS_AZURE:-claude-opus-5}"
 export CLAUDE_MODEL_HAIKU_AZURE="${CLAUDE_MODEL_HAIKU_AZURE:-claude-haiku-4-5}"
 export CLAUDE_MODEL_FABLE_AZURE="${CLAUDE_MODEL_FABLE_AZURE:-claude-fable-5}"  # Fable 5 deployment name (--fable/--best)
 
@@ -57,7 +57,7 @@ export CLAUDE_MODEL_FABLE_AZURE="${CLAUDE_MODEL_FABLE_AZURE:-claude-fable-5}"  #
 # See: https://vercel.com/ai-gateway
 # Uses format: anthropic/model-name (no date suffix)
 export CLAUDE_MODEL_SONNET_VERCEL="${CLAUDE_MODEL_SONNET_VERCEL:-anthropic/claude-sonnet-5}"
-export CLAUDE_MODEL_OPUS_VERCEL="${CLAUDE_MODEL_OPUS_VERCEL:-anthropic/claude-opus-4.8}"
+export CLAUDE_MODEL_OPUS_VERCEL="${CLAUDE_MODEL_OPUS_VERCEL:-anthropic/claude-opus-5}"
 export CLAUDE_MODEL_HAIKU_VERCEL="${CLAUDE_MODEL_HAIKU_VERCEL:-anthropic/claude-haiku-4.5}"
 # Fable 5 (--fable/--best). Slug not yet confirmed in Vercel's catalog; override if it differs.
 export CLAUDE_MODEL_FABLE_VERCEL="${CLAUDE_MODEL_FABLE_VERCEL:-anthropic/claude-fable-5}"
@@ -81,7 +81,7 @@ export CLAUDE_MODEL_FABLE_VERCEL="${CLAUDE_MODEL_FABLE_VERCEL:-anthropic/claude-
 # OpenRouter Model Defaults
 # See: https://openrouter.ai
 # Uses format: provider/model-name (with dots like 4.5, not dashes)
-export ROUTER_MODEL_HIGH="${ROUTER_MODEL_HIGH:-anthropic/claude-opus-4.8}"
+export ROUTER_MODEL_HIGH="${ROUTER_MODEL_HIGH:-anthropic/claude-opus-5}"
 export ROUTER_MODEL_MID="${ROUTER_MODEL_MID:-anthropic/claude-sonnet-5}"
 export ROUTER_MODEL_LOW="${ROUTER_MODEL_LOW:-anthropic/claude-haiku-4.5}"
 

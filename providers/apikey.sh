@@ -85,7 +85,7 @@ provider_get_model_id() {
 
     case "$tier" in
         fable) echo "${CLAUDE_MODEL_FABLE_ANTHROPIC:-claude-fable-5}" ;;
-        high) echo "${CLAUDE_MODEL_OPUS_ANTHROPIC:-claude-opus-4-8}" ;;
+        high) echo "${CLAUDE_MODEL_OPUS_ANTHROPIC:-claude-opus-5}" ;;
         mid)  echo "${CLAUDE_MODEL_SONNET_ANTHROPIC:-claude-sonnet-5}" ;;
         low)  echo "${CLAUDE_MODEL_HAIKU_ANTHROPIC:-claude-haiku-4-5}" ;;
         *)    echo "${CLAUDE_MODEL_SONNET_ANTHROPIC:-claude-sonnet-5}" ;;

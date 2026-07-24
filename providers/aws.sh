@@ -115,7 +115,7 @@ provider_get_model_id() {
 
     case "$tier" in
         fable) echo "${CLAUDE_MODEL_FABLE_AWS:-global.anthropic.claude-fable-5}" ;;
-        high) echo "${CLAUDE_MODEL_OPUS_AWS:-global.anthropic.claude-opus-4-8}" ;;
+        high) echo "${CLAUDE_MODEL_OPUS_AWS:-global.anthropic.claude-opus-5}" ;;
         mid)  echo "${CLAUDE_MODEL_SONNET_AWS:-global.anthropic.claude-sonnet-5}" ;;
         low)  echo "${CLAUDE_MODEL_HAIKU_AWS:-us.anthropic.claude-haiku-4-5-20251001-v1:0}" ;;
         *)    echo "${CLAUDE_MODEL_SONNET_AWS:-global.anthropic.claude-sonnet-5}" ;;

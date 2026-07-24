@@ -292,12 +292,15 @@ test_fable_tier() {
         fail "aws resolved fable -> '$out'"
     fi
 
-    # Default (no flag) must remain Opus-tier, not Fable
-    out=$(bash -c "source '$PROJECT_DIR/config/models.sh' >/dev/null 2>&1; source '$PROJECT_DIR/providers/apikey.sh' >/dev/null 2>&1; provider_get_model_id high")
-    if [[ "$out" == "claude-opus-4-8" ]]; then
+    # Default (no flag) must remain Opus-tier, not Fable.
+    # Unset any inherited CLAUDE_MODEL_* first: the user's shell profile may export
+    # values from an older installed ~/.ai-runner/models.sh, which would otherwise
+    # win over the repo default and make this assert the environment, not the repo.
+    out=$(bash -c "unset \$(env | grep -o '^CLAUDE_MODEL_[A-Z_]*'); source '$PROJECT_DIR/config/models.sh' >/dev/null 2>&1; source '$PROJECT_DIR/providers/apikey.sh' >/dev/null 2>&1; provider_get_model_id high")
+    if [[ "$out" == "claude-opus-5" ]]; then
         pass "high tier still resolves to Opus (default unchanged)"
     else
-        fail "high tier resolved to '$out' (expected claude-opus-4-8)"
+        fail "high tier resolved to '$out' (expected claude-opus-5)"
     fi
 }
 

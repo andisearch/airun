@@ -57,6 +57,7 @@
 # export VERTEX_REGION_CLAUDE_4_6_OPUS="europe-west1"
 # export VERTEX_REGION_CLAUDE_4_7_OPUS="europe-west1"
 # export VERTEX_REGION_CLAUDE_4_8_OPUS="europe-west1"
+# export VERTEX_REGION_CLAUDE_5_OPUS="europe-west1"
 
 # Anthropic API Key
 # See: https://console.anthropic.com/
@@ -96,31 +97,31 @@
 
 # AWS Bedrock Models
 # export CLAUDE_MODEL_SONNET_AWS="global.anthropic.claude-sonnet-5"
-# export CLAUDE_MODEL_OPUS_AWS="global.anthropic.claude-opus-4-8"
+# export CLAUDE_MODEL_OPUS_AWS="global.anthropic.claude-opus-5"
 # export CLAUDE_MODEL_HAIKU_AWS="us.anthropic.claude-haiku-4-5-20251001-v1:0"
 # export CLAUDE_MODEL_FABLE_AWS="global.anthropic.claude-fable-5"
 
 # Google Vertex Models
 # export CLAUDE_MODEL_SONNET_VERTEX="claude-sonnet-5"
-# export CLAUDE_MODEL_OPUS_VERTEX="claude-opus-4-8"
+# export CLAUDE_MODEL_OPUS_VERTEX="claude-opus-5"
 # export CLAUDE_MODEL_HAIKU_VERTEX="claude-haiku-4-5@20251001"
 # export CLAUDE_MODEL_FABLE_VERTEX="claude-fable-5"
 
 # Anthropic API Models (also used by --pro)
 # export CLAUDE_MODEL_SONNET_ANTHROPIC="claude-sonnet-5"
-# export CLAUDE_MODEL_OPUS_ANTHROPIC="claude-opus-4-8"
+# export CLAUDE_MODEL_OPUS_ANTHROPIC="claude-opus-5"
 # export CLAUDE_MODEL_HAIKU_ANTHROPIC="claude-haiku-4-5"
 # export CLAUDE_MODEL_FABLE_ANTHROPIC="claude-fable-5"
 
 # Microsoft Foundry/Azure Models (deployment names - must match your Azure deployments)
 # export CLAUDE_MODEL_SONNET_AZURE="claude-sonnet-5"
-# export CLAUDE_MODEL_OPUS_AZURE="claude-opus-4-8"
+# export CLAUDE_MODEL_OPUS_AZURE="claude-opus-5"
 # export CLAUDE_MODEL_HAIKU_AZURE="claude-haiku-4-5"
 # export CLAUDE_MODEL_FABLE_AZURE="claude-fable-5"
 
 # Vercel AI Gateway Models (supports any model via Vercel AI Gateway)
 # export CLAUDE_MODEL_SONNET_VERCEL="anthropic/claude-sonnet-5"
-# export CLAUDE_MODEL_OPUS_VERCEL="anthropic/claude-opus-4.8"
+# export CLAUDE_MODEL_OPUS_VERCEL="anthropic/claude-opus-5"
 # export CLAUDE_MODEL_HAIKU_VERCEL="anthropic/claude-haiku-4.5"
 # export CLAUDE_MODEL_FABLE_VERCEL="anthropic/claude-fable-5"
 # Non-Anthropic models (see https://vercel.com/ai-gateway/models):
@@ -197,7 +198,7 @@
 # export OPENROUTER_API_KEY="sk-or-..."
 
 # OpenRouter Model Tier Mappings
-# export ROUTER_MODEL_HIGH="anthropic/claude-opus-4.8"
+# export ROUTER_MODEL_HIGH="anthropic/claude-opus-5"
 # export ROUTER_MODEL_MID="anthropic/claude-sonnet-5"
 # export ROUTER_MODEL_LOW="anthropic/claude-haiku-4.5"
 

@@ -525,7 +525,7 @@ Model flags (pick one):
   --opus, --high               Highest Opus-tier model (default)
   --sonnet, --mid              Mid-tier model
   --haiku, --low               Lowest-tier model
-  --model <id>                 Specific model ID (e.g. claude-opus-4-8)
+  --model <id>                 Specific model ID (e.g. claude-opus-5)
 
 Tool flags:
   --tool <name>                Select AI tool (default: auto-detect)

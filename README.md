@@ -5,7 +5,7 @@ Run AI prompts like programs. Executable markdown with shebang, Unix pipes, and 
 ```bash
 # Claude Code: any model or provider
 ai                                        # Regular Claude subscription (Pro, Max)
-ai --aws --opus --team --resume           # Resume chats on AWS w/ Opus 4.8 + Agent Teams
+ai --aws --opus --team --resume           # Resume chats on AWS w/ Opus 5 + Agent Teams
 ai --ollama --bypass --model qwen3-coder  # Ollama local model with bypassPermissions set
 
 # Codex CLI: OpenAI's coding agent
@@ -40,7 +40,7 @@ Choose your runtime — [Claude Code](https://claude.ai/code) or [Codex CLI](htt
 
 From [Andi AI Search](https://andisearch.com). [Star this repo](https://github.com/andisearch/airun) if it helps!
 
-**Latest:** **Opus 4.8** default across all providers. Codex CLI support (`--codex`), cross-interpreter effort levels (`--effort`), tool profiles (`--profile`). Script variables, live streaming, Agent Teams, local models (Ollama, LM Studio), persistent defaults, 100+ cloud models via Vercel. See [CHANGELOG.md](CHANGELOG.md).
+**Latest:** **Opus 5** default across all providers. Codex CLI support (`--codex`), cross-interpreter effort levels (`--effort`), tool profiles (`--profile`). Script variables, live streaming, Agent Teams, local models (Ollama, LM Studio), persistent defaults, 100+ cloud models via Vercel. See [CHANGELOG.md](CHANGELOG.md).
 
 ## Quick Start
 
@@ -141,7 +141,7 @@ ai --lmstudio                     # LM Studio (MLX, Apple Silicon)
 
 # Model tiers (map to each runtime's best models)
 ai --fable task.md                # Claude: Fable 5 (top tier, Anthropic only); --best is a synonym
-ai --opus task.md                 # Claude: Opus 4.8 (default) / Codex: gpt-5.4
+ai --opus task.md                 # Claude: Opus 5 (default) / Codex: gpt-5.4
 ai --sonnet task.md               # Claude: Sonnet 5 / Codex: gpt-5.3-codex (mid tier)
 ai --haiku task.md                # Claude: Haiku 4.5 / Codex: gpt-5.4-mini
 ai --codex --high task.md         # Codex with gpt-5.4
@@ -355,7 +355,7 @@ ai --team --teammate-mode tmux   # Split panes via tmux
 
 | Flag | Runtime | Default Model | Install |
 |------|---------|---------------|---------|
-| `--cc` | Claude Code | claude-opus-4-8 | `curl -fsSL https://claude.ai/install.sh \| bash` |
+| `--cc` | Claude Code | claude-opus-5 | `curl -fsSL https://claude.ai/install.sh \| bash` |
 | `--codex` | Codex CLI | gpt-5.4 | `npm install -g @openai/codex` |
 
 Claude Code is the default runtime when both are installed. If only Codex is installed, it becomes the default automatically.
@@ -384,7 +384,7 @@ ai --ollama                    # Claude Code + Ollama
 ai --codex --ollama            # Codex CLI + Ollama
 
 # Claude Code cloud providers
-ai --aws --opus task.md        # AWS Bedrock + Opus 4.8
+ai --aws --opus task.md        # AWS Bedrock + Opus 5
 ai --vertex task.md            # Google Vertex AI
 
 # Codex CLI cloud providers

@@ -82,7 +82,7 @@ provider_get_model_id() {
 
     case "$tier" in
         fable) echo "${CLAUDE_MODEL_FABLE_VERCEL:-anthropic/claude-fable-5}" ;;
-        high) echo "${CLAUDE_MODEL_OPUS_VERCEL:-anthropic/claude-opus-4.8}" ;;
+        high) echo "${CLAUDE_MODEL_OPUS_VERCEL:-anthropic/claude-opus-5}" ;;
         mid)  echo "${CLAUDE_MODEL_SONNET_VERCEL:-anthropic/claude-sonnet-5}" ;;
         low)  echo "${CLAUDE_MODEL_HAIKU_VERCEL:-anthropic/claude-haiku-4.5}" ;;
         *)    echo "${CLAUDE_MODEL_SONNET_VERCEL:-anthropic/claude-sonnet-5}" ;;

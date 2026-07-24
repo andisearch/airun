@@ -5,6 +5,20 @@ All notable changes to AI Runner will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.6.2] - 2026-07-24
+
+### Changed
+- **Default Opus model bumped to 5** across all providers following Anthropic's release.
+  - Anthropic API / Pro: `claude-opus-5`
+  - AWS Bedrock: `global.anthropic.claude-opus-5` (global inference profile, same convention as Sonnet/Fable)
+  - Vertex AI: `claude-opus-5`
+  - Azure Foundry: `claude-opus-5` (default deployment name)
+  - Vercel AI Gateway / OpenRouter: `anthropic/claude-opus-5`
+  - Overridable per provider via `CLAUDE_MODEL_OPUS_{AWS,VERTEX,ANTHROPIC,AZURE,VERCEL}` and `ROUTER_MODEL_HIGH`.
+- `--fable`/`--best` (Claude Fable 5) remains the top tier above Opus — tier ordering unchanged.
+- Vertex region overrides gain `VERTEX_REGION_CLAUDE_5_OPUS`; the `_4_6`/`_4_7`/`_4_8` vars are kept for back-compat.
+- Docs updated to reference Opus 5 (README, help text, secrets.example.sh, and the airun-docs site).
+
 ## [2.6.1] - 2026-06-30
 
 ### Changed
