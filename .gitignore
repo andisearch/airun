@@ -23,11 +23,13 @@ promo/
 # Test output
 test/automation/output/
 
+# Local-only agent/tooling files (never published)
 CLAUDE.md
-
+.cursor/
 .specstory/
 .gstack/
-.cursor/
 
-# Local planning docs (contain personal paths / internal ops notes)
-docs/PLAN-*.md
+# Local-only dev docs: plans, runbooks, handoffs.
+# NOT in docs/ — GitHub Pages serves main:/docs at airun.me, so anything
+# committed there is web-published. See devdocs/README.md.
+devdocs/
