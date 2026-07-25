@@ -26,3 +26,8 @@ test/automation/output/
 CLAUDE.md
 
 .specstory/
+.gstack/
+.cursor/
+
+# Local planning docs (contain personal paths / internal ops notes)
+docs/PLAN-*.md
