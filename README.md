@@ -88,7 +88,7 @@ git log -10 | ./summarize.md                  # Feed git history to AI
 
 **Run scripts from the web** ([installmd.org](https://installmd.org/) support):
 ```bash
-curl -fsSL https://andisearch.github.io/ai-scripts/analyze.md | ai
+curl -fsSL https://raw.githubusercontent.com/andisearch/airun/main/examples/analyze-code.md | ai
 echo "Explain what a Makefile does" | ai         # Simple prompt
 ```
 
@@ -321,7 +321,7 @@ Run AI scripts directly from the web:
 
 ```bash
 # Run a script from the web
-curl -fsSL https://andisearch.github.io/ai-scripts/analyze.md | ai
+curl -fsSL https://raw.githubusercontent.com/andisearch/airun/main/examples/analyze-code.md | ai
 
 # Simple prompt via pipe
 echo "Explain what a Dockerfile does" | ai
